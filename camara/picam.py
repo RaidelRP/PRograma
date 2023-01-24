@@ -3,26 +3,35 @@ import time
 import cv2
 import numpy as np
 import picamera
-import config
+#import config
+from threading import Thread
 
 
-class OpenCVCapture(object):
-  def read(self):
-    data = io.BytesIO()
-    
-    # Resolucion original
-    CAMERA_WIDTH = 640
-    CAMERA_HEIGHT = 480
-    
-    #CAMERA_WIDTH = 1280
-    #CAMERA_HEIGHT = 720
-    
-    with picamera.PiCamera() as camera:
-      camera.resolution = (CAMERA_WIDTH, CAMERA_HEIGHT)  
-      camera.rotation = (-90)
-      camera.capture(data, format='jpeg')
-    data = np.fromstring(data.getvalue(), dtype=np.uint8)
+class OpenCVCapture(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        # self.image =  np.ndarray([]
 
-    image = cv2.imdecode(data, 1)
+    def run(self):
+        data = io.BytesIO()
 
-    return image
+        CAMERA_WIDTH = 640
+        CAMERA_HEIGHT = 480
+
+        with picamera.PiCamera() as camera:
+            # camera.start_preview()
+            camera.resolution = (CAMERA_WIDTH, CAMERA_HEIGHT)
+            camera.rotation = 180
+            #camera.brightness= 65
+            #camera.shutter_speed= 300000
+            #camera.framerate = 60
+            # camera.stop_preview()
+            for img in camera.capture_continuous(data, format='jpeg'):
+                data.truncate()
+                data.seek(0)
+
+                dataimg = np.fromstring(img.getvalue(), dtype=np.uint8)
+                self.image = cv2.imdecode(dataimg, 1)
+
+    def get_image(self):
+        return self.image
