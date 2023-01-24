@@ -24,6 +24,44 @@ semaforo = Semaphore(1)
 logging.basicConfig(level=logging.INFO,
                     format='[%(levelname)s] (%(threadName)-s) %(message)s')
 
+def deteccion_cuerpo(frame):
+    body_cascade = cv2.CascadeClassifier('haarcascade_fullbody.xml')
+    upper_cascade = cv2.CascadeClassifier('haarcascade_upperbody.xml')
+    lower_cascade = cv2.CascadeClassifier('haarcascade_lowerbody.xml')
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    bodies = body_cascade.detectMultiScale(gray, 1.3, 5)
+    upper = upper_cascade.detectMultiScale(gray, 1.3, 5)
+    lower = lower_cascade.detectMultiScale(gray, 1.3, 5)
+
+    for (x, y, w, h) in bodies:
+        # cv2.rectangle(frame,(x,y),(x+w,y+h),(255,0,0),2)
+        # cv2.putText(frame,"body",(x,y+20),cv2.FONT_HERSHEY_DUPLEX,1.0,(255,0,0),1)
+        roi_gray = gray[y:y+h, x:x+w]
+        roi_color = frame[y:y+h, x:x+w]
+
+    for (x, y, w, h) in upper:
+        # cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),2)
+        # cv2.putText(frame,"upper",(x,y+20),cv2.FONT_HERSHEY_DUPLEX,1.0,(0,255,0),1)
+        roi_gray = gray[y:y+h, x:x+w]
+        roi_color = frame[y:y+h, x:x+w]
+
+    for (x, y, w, h) in lower:
+        # cv2.rectangle(frame,(x,y),(x+w,y+h),(0,0,255),2)
+        # cv2.putText(frame,"lower",(x,y+20),cv2.FONT_HERSHEY_DUPLEX,1.0,(0,0,255),1)
+        roi_gray = gray[y:y+h, x:x+w]
+        roi_color = frame[y:y+h, x:x+w]
+
+def deteccion_rostros_haar_cascade(frame):
+    face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+    faces = face_cascade.detectMultiScale(
+        frame, scaleFactor=1.2, minNeighbors=5)
+
+    for (x, y, w, h) in faces:
+        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+        cv2.putText(frame, "rostro haar", (x, y+20),
+                    cv2.FONT_HERSHEY_DUPLEX, 1.0, (0, 0, 255), 1)
+
 
 def deteccion_identificacion_rostros(frame, coordenadas_local, personas, nombre_camara):
     rgb_frame = frame[:, :, ::-1]
