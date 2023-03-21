@@ -2,3 +2,7 @@
 *.code-workspace
 historial.txt
 facerec_from_webcam_hilo_haarcscade.py
+*copy*
+video*
+Desconocido*
+modelos

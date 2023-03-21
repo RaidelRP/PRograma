@@ -10,14 +10,26 @@ global known_face_encodings
 global known_face_names
 
 global imagenes
-imagenes = [resize(cv2.imread('negro.png'), height=840, width=597),
-            resize(cv2.imread('negro.png'), height=280, width=373),
-            resize(cv2.imread('negro.png'), height=280, width=373),
-            resize(cv2.imread('negro.png'), height=280, width=373)
+imagenes = [resize(cv2.imread("negro.png"), height=840, width=597),
+            resize(cv2.imread("negro.png"), height=280, width=373),
+            resize(cv2.imread("negro.png"), height=280, width=373),
+            resize(cv2.imread("negro.png"), height=280, width=373)
             ]
 
 known_face_encodings = []
 known_face_names = []
+
+detector_yunet = cv2.FaceDetectorYN.create(
+        "modelos/face_detection_yunet_2022mar.onnx", "", (320, 320))
+
+net_yolo = cv2.dnn.readNet("modelos/yolov3.weights", "modelos/yolov3.cfg")
+classes_yolo = []
+
+# Load coco
+with open("modelos/coco.names", "r") as f:
+    classes = [line.strip() for line in f.readlines()]
+layer_names_yolo = net_yolo.getLayerNames()
+output_layers_yolo = [layer_names_yolo[i - 1] for i in net_yolo.getUnconnectedOutLayers()]
 
 imageFacesPath = "rostros"
 for file_name in os.listdir(imageFacesPath):

@@ -27,6 +27,21 @@ def existe_en_tracking(nombre, tracking):
     return False
 
 
+def coincide_rostro_en_tracking(persona, tracking):
+    for t in tracking:
+        # print("IOU (coincide_rostro_en_tracking)", get_iou(persona["coordenadas_rostro"], t["coordenadas_rostro"]))
+        if get_iou(persona["coordenadas_rostro"], t["coordenadas_rostro"]) > 0.1:
+            return True
+    return False
+
+def coincide_cuerpo_en_tracking(persona, tracking):
+    for t in tracking:
+        # print("IOU (coincide_cuerpo_en_tracking)", get_iou(persona["coordenadas_rostro"], t["coordenadas_rostro"]))
+        if get_iou(persona["coordenadas_cuerpo"], t["coordenadas_cuerpo"]) > 0.1:
+            return True
+    return False
+
+
 def pos_en_tracking(nombre, tracking):
     for i in range(0, len(tracking)):
         if tracking[i]["nombre"] == nombre:
@@ -35,10 +50,10 @@ def pos_en_tracking(nombre, tracking):
 
 
 def get_iou(bb1, bb2):
-    assert bb1[0] < bb1[2]
-    assert bb1[1] < bb1[3]
-    assert bb2[0] < bb2[2]
-    assert bb2[1] < bb2[3]
+    assert bb1[0] <= bb1[2]
+    assert bb1[1] <= bb1[3]
+    assert bb2[0] <= bb2[2]
+    assert bb2[1] <= bb2[3]
 
     x_left = max(bb1[0], bb2[0])
     y_top = max(bb1[1], bb2[1])
@@ -65,7 +80,7 @@ def contar_desconocidos():
     myPath = "rostros"
     for root, dirs, files in os.walk(myPath):
         for file in files:
-            if file.startswith('desconocido'):
+            if file.startswith("Desconocido"):
                 counter += 1
     return counter
 
@@ -75,8 +90,38 @@ def coordenada_aleatoria(x, y):
 
 
 def historial(nombre):
-    with open("historial.txt", 'a+') as historial:
+    with open("historial.txt", "a+") as historial:
         fecha_completa = datetime.now()
         fecha = fecha_completa.strftime("%Y-%m-%d")
         hora = fecha_completa.strftime("%H:%M:%S")
-        historial.writelines(f'{fecha} {hora} - {nombre}\n')
+        historial.writelines(f"{fecha} {hora} - {nombre}\n")
+
+
+def coincide_rostro(rostro, cuerpo):
+    assert rostro[0] <= rostro[2]
+    assert rostro[1] <= rostro[3]
+    assert cuerpo[0] <= cuerpo[2]
+    assert cuerpo[1] <= cuerpo[3]
+
+    x_left = max(rostro[0], cuerpo[0])
+    y_top = max(rostro[1], cuerpo[1])
+    x_right = min(rostro[2], cuerpo[2])
+    y_bottom = min(rostro[3], cuerpo[3])
+
+    if x_right < x_left or y_bottom < y_top:
+        return 0.0
+
+    intersection_area = (x_right - x_left) * (y_bottom - y_top)
+
+    rostro_area = (rostro[2] - rostro[0]) * (rostro[3] - rostro[1])
+
+    return (intersection_area >= 0.5 * rostro_area)
+
+
+def unir_rostros_cuerpos(rostros, cuerpos):
+    for rostro in rostros:
+        for cuerpo in cuerpos:
+            if coincide_rostro(rostro["coordenadas_rostro"], cuerpo["coordenadas_cuerpo"]):
+                rostro["coordenadas_cuerpo"] = cuerpo["coordenadas_cuerpo"]
+                rostro["confianza_cuerpo"] = cuerpo["confianza_cuerpo"]
+                cuerpos.remove(cuerpo)

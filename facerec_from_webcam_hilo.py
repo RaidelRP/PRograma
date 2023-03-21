@@ -17,53 +17,18 @@ import face_recognition
 
 from datos import tracking_general, imagenes, known_face_encodings, known_face_names
 import datos
-from functions import contar_desconocidos, existe_en_tracking, get_iou, resize, historial
+from functions import contar_desconocidos, existe_en_tracking, get_iou, resize, historial, unir_rostros_cuerpos, coincide_rostro_en_tracking, coincide_cuerpo_en_tracking
+from metodos_deteccion import coordenadas_yunet_a_facerec, deteccion_personas_yolo
+
+from datetime import datetime
 
 semaforo = Semaphore(1)
 
 logging.basicConfig(level=logging.INFO,
-                    format='[%(levelname)s] (%(threadName)-s) %(message)s')
-
-def deteccion_cuerpo(frame):
-    body_cascade = cv2.CascadeClassifier('haarcascade_fullbody.xml')
-    upper_cascade = cv2.CascadeClassifier('haarcascade_upperbody.xml')
-    lower_cascade = cv2.CascadeClassifier('haarcascade_lowerbody.xml')
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-    bodies = body_cascade.detectMultiScale(gray, 1.3, 5)
-    upper = upper_cascade.detectMultiScale(gray, 1.3, 5)
-    lower = lower_cascade.detectMultiScale(gray, 1.3, 5)
-
-    for (x, y, w, h) in bodies:
-        # cv2.rectangle(frame,(x,y),(x+w,y+h),(255,0,0),2)
-        # cv2.putText(frame,"body",(x,y+20),cv2.FONT_HERSHEY_DUPLEX,1.0,(255,0,0),1)
-        roi_gray = gray[y:y+h, x:x+w]
-        roi_color = frame[y:y+h, x:x+w]
-
-    for (x, y, w, h) in upper:
-        # cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),2)
-        # cv2.putText(frame,"upper",(x,y+20),cv2.FONT_HERSHEY_DUPLEX,1.0,(0,255,0),1)
-        roi_gray = gray[y:y+h, x:x+w]
-        roi_color = frame[y:y+h, x:x+w]
-
-    for (x, y, w, h) in lower:
-        # cv2.rectangle(frame,(x,y),(x+w,y+h),(0,0,255),2)
-        # cv2.putText(frame,"lower",(x,y+20),cv2.FONT_HERSHEY_DUPLEX,1.0,(0,0,255),1)
-        roi_gray = gray[y:y+h, x:x+w]
-        roi_color = frame[y:y+h, x:x+w]
-
-def deteccion_rostros_haar_cascade(frame):
-    face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-    faces = face_cascade.detectMultiScale(
-        frame, scaleFactor=1.2, minNeighbors=5)
-
-    for (x, y, w, h) in faces:
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-        cv2.putText(frame, "rostro haar", (x, y+20),
-                    cv2.FONT_HERSHEY_DUPLEX, 1.0, (0, 0, 255), 1)
+                    format="[%(levelname)s] (%(threadName)-s) %(message)s")
 
 
-def deteccion_identificacion_rostros(frame, coordenadas_local, personas, nombre_camara):
+def deteccion_identificacion_rostros(frame, coordenadas_local, rostros, nombre_camara):
     rgb_frame = frame[:, :, ::-1]
 
     face_locations = face_recognition.face_locations(rgb_frame)
@@ -73,8 +38,15 @@ def deteccion_identificacion_rostros(frame, coordenadas_local, personas, nombre_
     for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
         # Persona con nombre, distancia, coordenadas y ttl
         name = "Desconocido"
-        p = {'nombre': name, 'distancia': 0.0,
-             'coordenadas': (left, top, right, bottom), 'ttl': 0, 'coordenadas_local': coordenadas_local, 'coordenadas_mapa': (0, 0), 'nombre_camara': nombre_camara}
+        p = {"nombre": name,
+             "coordenadas_local": coordenadas_local,
+             "nombre_camara": nombre_camara,
+             "coordenadas_mapa": (0, 0),
+             "ttl": 0,
+             "coordenadas_rostro": (left, top, right, bottom),
+             "distancia_rostro": 0.0,
+             "coordenadas_cuerpo": (0, 0, 0, 0),
+             "confianza_cuerpo": 0.0}
 
         matches = face_recognition.compare_faces(
             known_face_encodings, face_encoding)
@@ -85,23 +57,22 @@ def deteccion_identificacion_rostros(frame, coordenadas_local, personas, nombre_
         if matches[best_match_index]:  # Rostros identificados
             name = known_face_names[best_match_index]
             p["nombre"] = name
-            p["distancia"] = face_distances[best_match_index]
-            personas.append(p)
+            p["distancia_rostro"] = face_distances[best_match_index]
+            rostros.append(p)
 
         else:  # Rostros desconocidos
             id = contar_desconocidos()
-            # myPath = os.path.abspath(os.getcwd())
             myPath = "rostros"
             rostro = frame[top:bottom, left:right]
-            name += '_{}'.format(id)
+            name += "_{}".format(id)
             rostro = cv2.resize(rostro, (150, 150),
                                 interpolation=cv2.INTER_CUBIC)
-            cv2.imwrite(myPath + '\\' + name + '.jpg', rostro)
+            cv2.imwrite(myPath + "\\" + name + ".jpg", rostro)
 
             image = face_recognition.load_image_file(
-                myPath + '\\' + name + '.jpg')
+                myPath + "\\" + name + ".jpg")
 
-            if(len(face_recognition.face_encodings(image)) > 0):
+            if (len(face_recognition.face_encodings(image)) > 0):
                 face_encoding = face_recognition.face_encodings(image)[0]
 
                 semaforo.acquire()
@@ -117,35 +88,103 @@ def deteccion_identificacion_rostros(frame, coordenadas_local, personas, nombre_
                         datos.font, 1.0, datos.BLANCO, 1)
 
 
-def seguimiento(personas, nombre_camara):
-    for persona_detectada in personas:
+def deteccion_yunet_identificacion_rostros(frame, coordenadas_local, rostros, nombre_camara, detector_yunet):
+    rgb_frame = frame[:, :, ::-1]
+
+    img_W = int(frame.shape[1])
+    img_H = int(frame.shape[0])
+
+    detector_yunet.setInputSize((img_W, img_H))
+    detections = detector_yunet.detect(frame)
+
+    face_locations = coordenadas_yunet_a_facerec(detections)
+    face_encodings = face_recognition.face_encodings(
+        rgb_frame, face_locations)
+
+    for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
+        # Persona con nombre, distancia, coordenadas y ttl
+        name = "Desconocido"
+        p = {"nombre": name,
+             "coordenadas_local": coordenadas_local,
+             "nombre_camara": nombre_camara,
+             "coordenadas_mapa": (0, 0),
+             "ttl": 0,
+             "coordenadas_rostro": (left, top, right, bottom),
+             "distancia_rostro": 0.0,
+             "coordenadas_cuerpo": (0, 0, 0, 0),
+             "confianza_cuerpo": 0.0}
+
+        matches = face_recognition.compare_faces(
+            known_face_encodings, face_encoding)
+
+        face_distances = face_recognition.face_distance(
+            known_face_encodings, face_encoding)
+
+        best_match_index = np.argmin(face_distances)
+
+        if matches[best_match_index]:  # Rostros identificados
+            name = known_face_names[best_match_index]
+            p["nombre"] = name
+            p["distancia_rostro"] = face_distances[best_match_index]
+            rostros.append(p)
+
+        else:  # Rostros desconocidos
+            id = contar_desconocidos()
+            myPath = "rostros"
+            rostro = frame[top:bottom, left:right]
+            name += "_{}".format(id)
+            rostro = cv2.resize(rostro, (150, 150),
+                                interpolation=cv2.INTER_CUBIC)
+            cv2.imwrite(myPath + "\\" + name + ".jpg", rostro)
+
+            image = face_recognition.load_image_file(
+                myPath + "\\" + name + ".jpg")
+
+            if (len(face_recognition.face_encodings(image)) > 0):
+                face_encoding = face_recognition.face_encodings(image)[0]
+
+                semaforo.acquire()
+                known_face_encodings.append(face_encoding)
+                known_face_names.append(name)
+                semaforo.release()
+
+            cv2.rectangle(frame, (left, top),
+                          (right, bottom), datos.ROJO, 2)
+            cv2.rectangle(frame, (left, bottom - 35),
+                          (right, bottom), datos.ROJO, cv2.FILLED)
+            cv2.putText(frame, name, (left + 6, bottom - 6),
+                        datos.font, 1.0, datos.BLANCO, 1)
+
+
+def seguimiento_cuerpo(cuerpos, nombre_camara):
+    for cuerpo in cuerpos:
         # verifico si no se ha incluido en el tracking para insertarla
-        if not existe_en_tracking(persona_detectada["nombre"], tracking_general):
-            persona_detectada["ttl"] = 10
+        if not coincide_cuerpo_en_tracking(cuerpo, tracking_general):
+            cuerpo["ttl"] = 10
 
             semaforo.acquire()
-            tracking_general.append(persona_detectada)
+            tracking_general.append(cuerpo)
             semaforo.release()
 
         for persona_seguida in tracking_general:
             # si se detecta procedente de un local sin camara, asignarle la camara actual
-            if persona_detectada["nombre"] == persona_seguida["nombre"] and persona_seguida["nombre_camara"] == "NINGUNO":
+            if cuerpo["nombre"] == persona_seguida["nombre"] and persona_seguida["nombre_camara"] == "NINGUNO":
                 semaforo.acquire()
                 persona_seguida["nombre_camara"] = nombre_camara
                 semaforo.release()
 
-            if get_iou(persona_detectada["coordenadas"], persona_seguida["coordenadas"]) > 0.1:
+            if get_iou(cuerpo["coordenadas_cuerpo"], persona_seguida["coordenadas_cuerpo"]) > 0.1:
 
                 semaforo.acquire()
-                persona_seguida["coordenadas"] = persona_detectada["coordenadas"]
+                persona_seguida["coordenadas_cuerpo"] = cuerpo["coordenadas_cuerpo"]
                 semaforo.release()
 
-                if persona_detectada["distancia"] < persona_seguida["distancia"]:
+                if cuerpo["confianza_cuerpo"] > persona_seguida["confianza_cuerpo"]:
 
                     semaforo.acquire()
 
-                    persona_seguida["distancia"] = persona_seguida["distancia"]
-                    persona_seguida["nombre"] = persona_seguida["nombre"]
+                    persona_seguida["confianza_cuerpo"] = cuerpo["confianza_cuerpo"]
+                    persona_seguida["nombre"] = cuerpo["nombre"]
 
                     semaforo.release()
 
@@ -153,32 +192,83 @@ def seguimiento(personas, nombre_camara):
                 persona_seguida["ttl"] = 10
                 semaforo.release()
 
-            historial(persona_seguida["nombre"])
+
+def seguimiento_rostro(rostros, nombre_camara):
+    for rostro in rostros:
+        # verifico si no se ha incluido en el tracking para insertarla
+        if not coincide_rostro_en_tracking(rostro, tracking_general):
+            rostro["ttl"] = 10
+
+            semaforo.acquire()
+            tracking_general.append(rostro)
+            semaforo.release()
+
+        for persona_seguida in tracking_general:
+            # si se detecta procedente de un local sin camara, asignarle la camara actual
+            if rostro["nombre"] == persona_seguida["nombre"] and persona_seguida["nombre_camara"] == "NINGUNO":
+                semaforo.acquire()
+                persona_seguida["nombre_camara"] = nombre_camara
+                semaforo.release()
+
+            if get_iou(rostro["coordenadas_rostro"], persona_seguida["coordenadas_rostro"]) > 0.1:
+
+                semaforo.acquire()
+                persona_seguida["coordenadas_rostro"] = rostro["coordenadas_rostro"]
+                semaforo.release()
+
+                if rostro["distancia_rostro"] < persona_seguida["distancia_rostro"]:
+
+                    semaforo.acquire()
+
+                    persona_seguida["distancia_rostro"] = rostro["distancia_rostro"]
+                    persona_seguida["nombre"] = rostro["nombre"]
+
+                    semaforo.release()
+
+                semaforo.acquire()
+                persona_seguida["ttl"] = 10
+                semaforo.release()
+
+            # historial(persona_seguida["nombre"])
+
+
+def seguimiento(rostros, cuerpos, nombre_camara):
+    seguimiento_cuerpo(cuerpos, nombre_camara)
+    seguimiento_rostro(rostros, nombre_camara)
 
 
 def rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame, camara):
     for persona in tracking_general:
         # Si se encuentra en el local actual y la camara actual
-        if persona['coordenadas_local'] == coordenadas_local and persona["nombre_camara"] == nombre_camara:
-            cv2.rectangle(frame, (persona["coordenadas"][0], persona["coordenadas"][1]), (
-                persona["coordenadas"][2], persona["coordenadas"][3]), datos.VERDE, 2)
+        if persona["coordenadas_local"] == coordenadas_local and persona["nombre_camara"] == nombre_camara:
+            if persona["coordenadas_cuerpo"] != (0, 0, 0, 0):
+                cv2.rectangle(frame,
+                              (persona["coordenadas_cuerpo"][0],
+                               persona["coordenadas_cuerpo"][1]),
+                              (persona["coordenadas_cuerpo"][2],
+                               persona["coordenadas_cuerpo"][3]),
+                              datos.VERDE, 2)
 
-            cv2.rectangle(frame, (persona["coordenadas"][0], persona["coordenadas"][3] - 35),
-                          (persona["coordenadas"][2], persona["coordenadas"][3]), datos.VERDE, cv2.FILLED)
-            cv2.putText(frame, persona["nombre"], (persona["coordenadas"][0] + 6, persona["coordenadas"][3] - 6),
-                        datos.font, 1.0, datos.BLANCO, 1)
+                cv2.rectangle(frame,
+                              (persona["coordenadas_cuerpo"][0],
+                               persona["coordenadas_cuerpo"][3] - 35),
+                              (persona["coordenadas_cuerpo"][2],
+                               persona["coordenadas_cuerpo"][3]),
+                              datos.VERDE, cv2.FILLED)
+                cv2.putText(frame, persona["nombre"], (persona["coordenadas_cuerpo"][0] + 6, persona["coordenadas_cuerpo"][3] - 6),
+                            datos.font, 1.0, datos.BLANCO, 1)
 
-            if persona["ttl"] == 0:
-                i = 0
-                for (top, right, bottom, left) in camara["rectangulos"]:
-                    if get_iou(persona["coordenadas"], (top, right, bottom, left)) > 0.1:
-                        semaforo.acquire()
-                        # persona["coordenadas"] = camara["rectangulos_relacionados"][i]
-                        persona['coordenadas_local'] = camara["locales_relacionados"][i]
-                        persona['nombre_camara'] = camara["camaras_relacionadas"][i]
-                        persona["ttl"] = 10
-                        semaforo.release()
-                    i = i + 1
+                if persona["ttl"] == 0:
+                    i = 0
+                    for (top, right, bottom, left) in camara["rectangulos"]:
+                        if get_iou(persona["coordenadas_cuerpo"], (top, right, bottom, left)) > 0.1:
+                            semaforo.acquire()
+                            # persona["coordenadas_rostro"] = camara["rectangulos_relacionados"][i]
+                            persona["coordenadas_local"] = camara["locales_relacionados"][i]
+                            persona["nombre_camara"] = camara["camaras_relacionadas"][i]
+                            persona["ttl"] = 10
+                            semaforo.release()
+                        i = i + 1
 
 
 def rectangulos_entrada_salida(camara, frame):
@@ -186,20 +276,64 @@ def rectangulos_entrada_salida(camara, frame):
         cv2.rectangle(frame, (left, top), (right, bottom), datos.MARRON, 2)
 
 
+def procesamiento(frame, coordenadas_local, nombre_camara, camara, net, output_layers, detector_yunet):
+    rostros = []
+    cuerpos = []
+    deteccion_yunet_identificacion_rostros(
+        frame, coordenadas_local, rostros, nombre_camara, detector_yunet)
+    deteccion_personas_yolo(frame, cuerpos, coordenadas_local,
+                            nombre_camara, net, output_layers)
+    unir_rostros_cuerpos(rostros, cuerpos)
+    seguimiento(rostros, cuerpos, nombre_camara)
+    rectangulo_nombre_rostros(
+        coordenadas_local, nombre_camara, frame, camara)
+    # rectangulos_entrada_salida(camara, frame)
+
+
 def facerec_from_webcam(local, camara, pos):
     video_capture = cv2.VideoCapture(0)
-    coordenadas_local = local['coordenadas']
-    nombre_camara = camara['nombre_camara']
+    coordenadas_local = local["coordenadas"]
+    nombre_camara = camara["nombre_camara"]
+
+    net_yolo = cv2.dnn.readNet("modelos/yolov3.weights", "modelos/yolov3.cfg")
+
+    layer_names = net_yolo.getLayerNames()
+    output_layers = [layer_names[i - 1]
+                     for i in net_yolo.getUnconnectedOutLayers()]
+
+    detector_yunet = cv2.FaceDetectorYN.create(
+        "modelos/face_detection_yunet_2022mar.onnx", "", (320, 320))
 
     while True:
-        personas = []
         ret, frame = video_capture.read()
-        deteccion_identificacion_rostros(
-            frame, coordenadas_local, personas, nombre_camara)
-        seguimiento(personas, nombre_camara)
-        rectangulo_nombre_rostros(
-            coordenadas_local, nombre_camara, frame, camara)
-        # rectangulos_entrada_salida(camara, frame)
+
+        procesamiento(frame, coordenadas_local, nombre_camara,
+                      camara, net_yolo, output_layers, detector_yunet)
+
+        semaforo.acquire()
+        imagenes[pos] = frame
+        semaforo.release()
+
+
+def facerec_from_video(local, camara, pos, ruta_video):
+    video_capture = cv2.VideoCapture(ruta_video)
+    coordenadas_local = local["coordenadas"]
+    nombre_camara = camara["nombre_camara"]
+
+    net_yolo = cv2.dnn.readNet("modelos/yolov3.weights", "modelos/yolov3.cfg")
+
+    layer_names = net_yolo.getLayerNames()
+    output_layers = [layer_names[i - 1]
+                     for i in net_yolo.getUnconnectedOutLayers()]
+
+    detector_yunet = cv2.FaceDetectorYN.create(
+        "modelos/face_detection_yunet_2022mar.onnx", "", (320, 320))
+
+    while True:
+        ret, frame = video_capture.read()
+
+        procesamiento(frame, coordenadas_local, nombre_camara,
+                      camara, net_yolo, output_layers, detector_yunet)
 
         semaforo.acquire()
         imagenes[pos] = frame
@@ -214,7 +348,16 @@ def facerec_from_socket(host_ip, port, local, camara, pos):
     payload_size = struct.calcsize("Q")
 
     coordenadas_local = local["coordenadas"]
-    nombre_camara = camara['nombre_camara']
+    nombre_camara = camara["nombre_camara"]
+
+    net_yolo = cv2.dnn.readNet("modelos/yolov3.weights", "modelos/yolov3.cfg")
+
+    layer_names = net_yolo.getLayerNames()
+    output_layers = [layer_names[i - 1]
+                     for i in net_yolo.getUnconnectedOutLayers()]
+
+    detector_yunet = cv2.FaceDetectorYN.create(
+        "modelos/face_detection_yunet_2022mar.onnx", "", (320, 320))
 
     while True:
         while len(data) < payload_size:
@@ -231,13 +374,9 @@ def facerec_from_socket(host_ip, port, local, camara, pos):
         data = data[msg_size:]
         frame = pickle.loads(frame_data)
 
-        personas = []
-        deteccion_identificacion_rostros(
-            frame, coordenadas_local, personas, nombre_camara)
-        seguimiento(personas, nombre_camara)
-        rectangulo_nombre_rostros(
-            coordenadas_local, nombre_camara, frame, camara)
-        # rectangulos_entrada_salida(camara, frame)
+        procesamiento(frame, coordenadas_local, nombre_camara,
+                      camara, net_yolo, output_layers, detector_yunet)
+
         semaforo.acquire()
         imagenes[pos] = frame
         semaforo.release()
@@ -273,7 +412,7 @@ def mostrar_mapa(pos):
 
             i = i + 1
 
-        logging.info(tracking_general)
+        # logging.info(tracking_general)
 
         semaforo.acquire()
         imagenes[pos] = img
@@ -294,13 +433,13 @@ def mostrar_imagenes():
 
         semaforo.release()
 
-        cv2.imshow('Mapa y camaras', concat_h)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        cv2.imshow("Mapa y camaras", concat_h)
+        if cv2.waitKey(30) & 0xFF == ord("q"):
             break
 
 
-hilo1 = threading.Thread(target=facerec_from_webcam,
-                         args=(datos.LOCAL3, datos.CAM1, 1), name="CAMARA 1")
+# hilo1 = threading.Thread(target=facerec_from_video,
+#                          args=(datos.LOCAL3, datos.CAM1, 1, "hamilton_clip.mp4"), name="CAMARA 1")
 hilo2 = threading.Thread(target=facerec_from_socket,
                          args=("10.30.125.149", 10500, datos.LOCAL2, datos.CAM2, 2), name="CAMARA 2")
 hilo3 = threading.Thread(target=facerec_from_socket,
@@ -308,14 +447,16 @@ hilo3 = threading.Thread(target=facerec_from_socket,
 hilo4 = threading.Thread(target=mostrar_mapa, args=(0,), name="PLANO")
 hilo5 = threading.Thread(target=mostrar_imagenes, name="VISUALIZACION")
 
-hilo1.start()
+# hilo1.start()
 hilo2.start()
 hilo3.start()
 hilo4.start()
 hilo5.start()
 
-hilo1.join()
+# hilo1.join()
 hilo2.join()
 hilo3.join()
 hilo4.join()
 hilo5.join()
+
+cv2.destroyAllWindows()
