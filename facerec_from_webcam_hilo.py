@@ -24,6 +24,7 @@ from datetime import datetime
 
 semaforo = Semaphore(1)
 
+
 logging.basicConfig(level=logging.INFO,
                     format="[%(levelname)s] (%(threadName)-s) %(message)s")
 
@@ -287,7 +288,7 @@ def procesamiento(frame, coordenadas_local, nombre_camara, camara, net, output_l
     seguimiento(rostros, cuerpos, nombre_camara)
     rectangulo_nombre_rostros(
         coordenadas_local, nombre_camara, frame, camara)
-    # rectangulos_entrada_salida(camara, frame)
+    rectangulos_entrada_salida(camara, frame)
 
 
 def facerec_from_webcam(local, camara, pos):
@@ -359,6 +360,7 @@ def facerec_from_socket(host_ip, port, local, camara, pos):
     detector_yunet = cv2.FaceDetectorYN.create(
         "modelos/face_detection_yunet_2022mar.onnx", "", (320, 320))
 
+    contador = 0
     while True:
         while len(data) < payload_size:
             packet = client_socket.recv(4*1024)
@@ -374,8 +376,12 @@ def facerec_from_socket(host_ip, port, local, camara, pos):
         data = data[msg_size:]
         frame = pickle.loads(frame_data)
 
-        procesamiento(frame, coordenadas_local, nombre_camara,
-                      camara, net_yolo, output_layers, detector_yunet)
+        contador = contador + 1
+        if contador == 3:
+
+            procesamiento(frame, coordenadas_local, nombre_camara,
+                        camara, net_yolo, output_layers, detector_yunet)
+            contador = 0
 
         semaforo.acquire()
         imagenes[pos] = frame
@@ -439,11 +445,11 @@ def mostrar_imagenes():
 
 
 # hilo1 = threading.Thread(target=facerec_from_video,
-#                          args=(datos.LOCAL3, datos.CAM1, 1, "hamilton_clip.mp4"), name="CAMARA 1")
+#                          args=(datos.LOCAL3, datos.CAM1, 1, "hamilton_clip.mp4"), name="VIDEO")
 hilo2 = threading.Thread(target=facerec_from_socket,
-                         args=("10.30.125.149", 10500, datos.LOCAL2, datos.CAM2, 2), name="CAMARA 2")
+                         args=("10.30.125.149", 10500, datos.LOBBY, datos.CAM1, 2), name="CAMARA 1")
 hilo3 = threading.Thread(target=facerec_from_socket,
-                         args=("10.30.125.150", 10510, datos.LOBBY, datos.CAM2, 3), name="CAMARA 3")
+                         args=("10.30.125.150", 10510, datos.AULA_PRE, datos.CAM2, 3), name="CAMARA 2")
 hilo4 = threading.Thread(target=mostrar_mapa, args=(0,), name="PLANO")
 hilo5 = threading.Thread(target=mostrar_imagenes, name="VISUALIZACION")
 

@@ -20,7 +20,7 @@ known_face_encodings = []
 known_face_names = []
 
 detector_yunet = cv2.FaceDetectorYN.create(
-        "modelos/face_detection_yunet_2022mar.onnx", "", (320, 320))
+    "modelos/face_detection_yunet_2022mar.onnx", "", (320, 320))
 
 net_yolo = cv2.dnn.readNet("modelos/yolov3.weights", "modelos/yolov3.cfg")
 classes_yolo = []
@@ -29,7 +29,8 @@ classes_yolo = []
 with open("modelos/coco.names", "r") as f:
     classes = [line.strip() for line in f.readlines()]
 layer_names_yolo = net_yolo.getLayerNames()
-output_layers_yolo = [layer_names_yolo[i - 1] for i in net_yolo.getUnconnectedOutLayers()]
+output_layers_yolo = [layer_names_yolo[i - 1]
+                      for i in net_yolo.getUnconnectedOutLayers()]
 
 imageFacesPath = "rostros"
 for file_name in os.listdir(imageFacesPath):
@@ -86,19 +87,29 @@ LAB = {"nombre_local": "LAB", "coordenadas": LAB_COORD}
 # (left, top, right, bottom)
 # (top, right, bottom, left)
 
-CAM1_RECTS = [(500, 0, 640, 480), (0, 0, 100, 480)]
-CAM2_RECTS = [(0, 0, 140, 480)]
-CAM3_RECTS = [(100, 50, 300, 250)]
+CAM1_RECTS = [(0, 250, 100, 480), (530, 350, 640, 480), (530, 70, 640, 300)]
+CAM2_RECTS = [(0, 0, 140, 280), (0, 320, 140, 480), (500, 80, 640, 320), (500, 340, 640, 480)]
+# CAM3_RECTS = [(100, 50, 300, 250)]
 
-CAM1_LOCS_REL = [LOCAL2_COORD, AULA_COORD]
-CAM2_LOCS_REL = [LOCAL3_COORD]
+CAM1_LOCS_REL = [AULA_COORD, PASILLO_COORD]
+CAM2_LOCS_REL = [PASILLO_COORD, LOCAL2_COORD, DIRECCION_COORD, LOCAL1_COORD]
 
-CAM1_RECTS_REL = [(0, 0, 140, 480), (0, 0, 0, 0)]
-CAM2_RECTS_REL = [(500, 0, 640, 480)]
+AULA_LOCS_REL = [LOBBY_COORD]
+LOBBY_LOCS_REL = [AULA_PRE_COORD, PASILLO_COORD]
+PASILLO_LOCS_REL = [LOBBY_COORD, DIRECCION_COORD,
+                    AULA_PRE_COORD, BANNO_COORD, PANTRY_COORD]
+AULA_PRE_LOCS_REL = [PASILLO_COORD, DIRECCION_COORD,
+                     LAB_COORD, LOCAL1_COORD, LOCAL2_COORD, LOCAL3_COORD]
+LOCAL1_LOCS_REL = [AULA_PRE_COORD]
+LOCAL2_LOCS_REL = [LOCAL3_COORD, AULA_PRE_COORD, PASILLO_COORD]
+LOCAL3_LOCS_REL = [LOCAL2_COORD, AULA_PRE_COORD]
+
+CAM1_RECTS_REL = [(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)]
+CAM2_RECTS_REL = [(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)]
 
 CAM1 = {"nombre_camara": "CAMARA 1", "rectangulos": CAM1_RECTS,
-        "locales_relacionados": CAM1_LOCS_REL, "rectangulos_relacionados": CAM1_RECTS_REL, "camaras_relacionadas": ["CAMARA 2", "NINGUNO"]}
+        "locales_relacionados": LOBBY_LOCS_REL, "rectangulos_relacionados": CAM1_RECTS_REL, "camaras_relacionadas": ["NINGUNO", "NINGUNO","NINGUNO"]}
 CAM2 = {"nombre_camara": "CAMARA 2", "rectangulos": CAM2_RECTS,
-        "locales_relacionados": CAM2_LOCS_REL, "rectangulos_relacionados": CAM2_RECTS_REL, "camaras_relacionadas": ["CAMARA 1"]}
-CAM3 = {"nombre_camara": "CAMARA 3", "rectangulos": CAM3_RECTS,
-        "locales_relacionados": [], "rectangulos_relacionados": [], "camaras_relacionadas": ["CAMARA 1"]}
+        "locales_relacionados": CAM2_LOCS_REL, "rectangulos_relacionados": CAM2_RECTS_REL, "camaras_relacionadas": ["NINGUNO","NINGUNO", "NINGUNO","NINGUNO"]}
+# CAM3 = {"nombre_camara": "CAMARA 3", "rectangulos": CAM3_RECTS,
+#         "locales_relacionados": [], "rectangulos_relacionados": [], "camaras_relacionadas": ["CAMARA 1"]}
