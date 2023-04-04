@@ -16,28 +16,16 @@ imagenes = [resize(cv2.imread("negro.png"), height=840, width=597),
             resize(cv2.imread("negro.png"), height=280, width=373)
             ]
 
+TTL_MAX = 30
+
 known_face_encodings = []
 known_face_names = []
-
-detector_yunet = cv2.FaceDetectorYN.create(
-    "modelos/face_detection_yunet_2022mar.onnx", "", (320, 320))
-
-net_yolo = cv2.dnn.readNet("modelos/yolov3.weights", "modelos/yolov3.cfg")
-classes_yolo = []
-
-# Load coco
-with open("modelos/coco.names", "r") as f:
-    classes = [line.strip() for line in f.readlines()]
-layer_names_yolo = net_yolo.getLayerNames()
-output_layers_yolo = [layer_names_yolo[i - 1]
-                      for i in net_yolo.getUnconnectedOutLayers()]
 
 imageFacesPath = "rostros"
 for file_name in os.listdir(imageFacesPath):
     image = cv2.imread(imageFacesPath + "/" + file_name)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    f_coding = face_recognition.face_encodings(
-        image, known_face_locations=[(0, 150, 150, 0)])[0]
+    f_coding = face_recognition.face_encodings(image)[0]
     known_face_encodings.append(f_coding)
     known_face_names.append(file_name.split(".")[0])
 
@@ -88,7 +76,8 @@ LAB = {"nombre_local": "LAB", "coordenadas": LAB_COORD}
 # (top, right, bottom, left)
 
 CAM1_RECTS = [(0, 250, 100, 480), (530, 350, 640, 480), (530, 70, 640, 300)]
-CAM2_RECTS = [(0, 0, 140, 280), (0, 320, 140, 480), (500, 80, 640, 320), (500, 340, 640, 480)]
+CAM2_RECTS = [(0, 0, 140, 280), (0, 320, 140, 480),
+              (500, 80, 640, 320), (500, 340, 640, 480)]
 # CAM3_RECTS = [(100, 50, 300, 250)]
 
 CAM1_LOCS_REL = [AULA_COORD, PASILLO_COORD]
@@ -108,8 +97,8 @@ CAM1_RECTS_REL = [(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)]
 CAM2_RECTS_REL = [(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)]
 
 CAM1 = {"nombre_camara": "CAMARA 1", "rectangulos": CAM1_RECTS,
-        "locales_relacionados": LOBBY_LOCS_REL, "rectangulos_relacionados": CAM1_RECTS_REL, "camaras_relacionadas": ["NINGUNO", "NINGUNO","NINGUNO"]}
+        "locales_relacionados": CAM1_LOCS_REL, "rectangulos_relacionados": CAM1_RECTS_REL, "camaras_relacionadas": ["NINGUNO", "NINGUNO", "NINGUNO"]}
 CAM2 = {"nombre_camara": "CAMARA 2", "rectangulos": CAM2_RECTS,
-        "locales_relacionados": CAM2_LOCS_REL, "rectangulos_relacionados": CAM2_RECTS_REL, "camaras_relacionadas": ["NINGUNO","NINGUNO", "NINGUNO","NINGUNO"]}
+        "locales_relacionados": CAM2_LOCS_REL, "rectangulos_relacionados": CAM2_RECTS_REL, "camaras_relacionadas": ["NINGUNO", "NINGUNO", "NINGUNO", "NINGUNO"]}
 # CAM3 = {"nombre_camara": "CAMARA 3", "rectangulos": CAM3_RECTS,
 #         "locales_relacionados": [], "rectangulos_relacionados": [], "camaras_relacionadas": ["CAMARA 1"]}

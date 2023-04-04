@@ -2,6 +2,7 @@ import cv2
 import os
 from random import randint
 from datetime import datetime
+import glob
 
 
 def resize(image, width=None, height=None, inter=cv2.INTER_AREA):
@@ -33,6 +34,7 @@ def coincide_rostro_en_tracking(persona, tracking):
         if get_iou(persona["coordenadas_rostro"], t["coordenadas_rostro"]) > 0.1:
             return True
     return False
+
 
 def coincide_cuerpo_en_tracking(persona, tracking):
     for t in tracking:
@@ -125,3 +127,45 @@ def unir_rostros_cuerpos(rostros, cuerpos):
                 rostro["coordenadas_cuerpo"] = cuerpo["coordenadas_cuerpo"]
                 rostro["confianza_cuerpo"] = cuerpo["confianza_cuerpo"]
                 cuerpos.remove(cuerpo)
+
+
+def comparar_imagenes(imagen1, imagen2):
+    shift = cv2.xfeatures2d.SIFT_create()
+    kp_1, desc_1 = shift.detectAndCompute(imagen1, None)
+    kp_2, desc_2 = shift.detectAndCompute(imagen2, None)
+
+    index_params = dict(algorithm=0, trees=5)
+    search_params = dict()
+
+    flann = cv2.FlannBasedMatcher(index_params, search_params)
+    matches = flann.knnMatch(desc_1, desc_2, k=2)
+
+    good_points = []
+    for m, n in matches:
+        if m.distance < 0.6*n.distance:
+            good_points.append(m)
+
+    number_keypoints = 0
+    if (len(kp_1) <= len(kp_2)):
+        number_keypoints = len(kp_1)
+    else:
+        number_keypoints = len(kp_2)
+
+    return len(good_points) / number_keypoints
+
+
+def comparar_imagen_con_varias(imagen, ruta):  # ruta = "rostros\*"
+    # Load all the images
+    all_images_to_compare = []
+    titles = []
+    for f in glob.iglob(ruta):
+        image = cv2.imread(f)
+        titles.append(f)
+        all_images_to_compare.append(image)
+
+    for image_to_compare, title in zip(all_images_to_compare, titles):
+        # print("comparar con "+ title +": " + str(comparar_imagenes(imagen, image_to_compare)))
+        if comparar_imagenes(imagen, image_to_compare) > 0.5:
+            return True
+
+    return False
