@@ -188,7 +188,7 @@ def rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame, camara):
                         persona["coordenadas_cuerpo"][2],
                         persona["coordenadas_cuerpo"][3],
                     ),
-                    datos.VERDE,
+                    datos.ROJO,
                     2,
                 )
 
@@ -202,12 +202,12 @@ def rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame, camara):
                         persona["coordenadas_cuerpo"][2],
                         persona["coordenadas_cuerpo"][3],
                     ),
-                    datos.VERDE,
+                    datos.ROJO,
                     cv2.FILLED,
                 )
                 cv2.putText(
                     frame,
-                    persona["nombre"],
+                    persona["nombre"] + " TTL: " + str(persona["ttl"]),
                     (
                         persona["coordenadas_cuerpo"][0] + 6,
                         persona["coordenadas_cuerpo"][3] - 6,
@@ -241,4 +241,4 @@ def rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame, camara):
 
 def rectangulos_entrada_salida(camara, frame):
     for left, top, right, bottom in camara["rectangulos"]:
-        cv2.rectangle(frame, (left, top), (right, bottom), datos.MARRON, 2)
+        cv2.rectangle(frame, (left, top), (right, bottom), datos.VERDE, 2)

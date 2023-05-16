@@ -239,11 +239,42 @@ def mostrar_mapa(pos):
     while True:
         img = cv2.imread(datos.mapa)
 
+        x, y, y1 = 0, 0, 0
+        for local in datos.LOCALES:
+            x = local["coordenadas"][0] + 10
+            y = local["coordenadas"][1] + 30
+            coord = (x, y)
+            cv2.putText(
+                img, local["nombre_local"], coord, datos.font, 0.8, datos.ROJO, 1
+            )
+            y1 = y
+            k = 0
+
+            for camara in local["camaras"]:
+                nombre = camara["nombre_camara"]
+                coord = (x + 10, y + 20 + k * 20)
+                cv2.putText(img, nombre, coord, datos.font, 0.8, datos.ROJO, 1)
+
+                y1 = y + 20 + k * 20
+                k = k + 1
+
+            i = 0
+            for persona in tracking_general:
+                if persona["coordenadas_local"] == local["coordenadas"]:
+                    x_mapa = x + 30
+                    y_mapa = y1 + i * 20 + 20
+
+                    semaforo.acquire()
+                    persona["coordenadas_mapa"] = (x_mapa, y_mapa)
+                    semaforo.release()
+
+                i = i + 1
+
         i = 0
         for persona in tracking_general:
             cv2.putText(
                 img,
-                persona["nombre"],
+                persona["nombre"] + " " + str(persona["ttl"]),
                 persona["coordenadas_mapa"],
                 datos.font,
                 0.75,
@@ -256,8 +287,8 @@ def mostrar_mapa(pos):
                 persona["ttl"] = persona["ttl"] - 1
                 semaforo.release()
 
-            x_mapa = persona["coordenadas_local"][0] + 40
-            y_mapa = persona["coordenadas_local"][1] + i * 25 + 40
+            # x_mapa = persona["coordenadas_local"][0] + 40
+            # y_mapa = persona["coordenadas_local"][1] + i * 25 + 40
 
             semaforo.acquire()
             persona["coordenadas_mapa"] = (x_mapa, y_mapa)
@@ -303,13 +334,13 @@ hilo1 = threading.Thread(
 )
 hilo2 = threading.Thread(
     target=facerec_from_socket,
-    args=("10.30.125.149", 10500, datos.LOBBY, datos.CAM1, 2),
-    name="CAMARA 1",
+    args=("10.30.125.149", 10500, datos.LOCAL3, datos.CAM4, 2),
+    name="CAMARA 4",
 )
 hilo3 = threading.Thread(
     target=facerec_from_socket,
-    args=("10.30.125.150", 10510, datos.AULA_PRE, datos.CAM2, 3),
-    name="CAMARA 2",
+    args=("10.30.125.150", 10510, datos.LOCAL2, datos.CAM5, 3),
+    name="CAMARA 5",
 )
 hilo4 = threading.Thread(target=mostrar_mapa, args=(0,), name="PLANO")
 hilo5 = threading.Thread(target=mostrar_imagenes, name="VISUALIZACION")
