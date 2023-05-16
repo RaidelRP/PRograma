@@ -5,6 +5,8 @@ from random import randint
 
 import cv2
 
+import datos
+
 
 def resize(image, width=None, height=None, inter=cv2.INTER_AREA):
     (original_height, original_width) = image.shape[:2]
@@ -178,3 +180,10 @@ def contenido_en(rect1, rect2):
         and rect1[2] <= rect2[2]
         and rect1[3] <= rect2[3]
     )
+
+def datos_camara(cam):
+    for local in datos.LOCALES:
+        for camara in local["camaras"]:
+            if camara["nombre_camara"] == cam:
+                return camara
+    return None

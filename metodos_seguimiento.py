@@ -5,7 +5,12 @@ import cv2
 
 import datos
 from datos import TTL_MAX, tracking_general
-from functions import coincide_cuerpo_en_tracking, coincide_rostro_en_tracking, get_iou
+from functions import (
+    coincide_cuerpo_en_tracking,
+    coincide_rostro_en_tracking,
+    get_iou,
+    contenido_en,
+)
 
 semaforo = Semaphore(1)
 
@@ -218,25 +223,29 @@ def rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame, camara):
                     1,
                 )
 
-                if persona["ttl"] == 0:
-                    i = 0
-                    for top, right, bottom, left in camara["rectangulos"]:
-                        if (
-                            get_iou(
-                                persona["coordenadas_cuerpo"],
-                                (top, right, bottom, left),
-                            )
-                            > 0.1
-                        ):
-                            semaforo.acquire()
-                            # persona["coordenadas_rostro"] = camara["rectangulos_relacionados"][i]
-                            persona["coordenadas_local"] = camara[
-                                "locales_relacionados"
-                            ][i]
-                            persona["nombre_camara"] = camara["camaras_relacionadas"][i]
-                            persona["ttl"] = datos.TTL_MAX
-                            semaforo.release()
-                        i = i + 1
+
+def transferencia(coordenadas_local, nombre_camara, camara):
+    for persona in tracking_general:
+        # Si se encuentra en el local actual y la camara actual
+        if (
+            persona["coordenadas_local"] == coordenadas_local
+            and persona["nombre_camara"] == nombre_camara
+        ):
+            if persona["ttl"] == 0:
+                i = 0
+                for left, top, right, bottom in camara["rectangulos"]:
+                    if contenido_en(
+                        persona["coordenadas_cuerpo"], (left, top, right, bottom)
+                    ):
+                        semaforo.acquire()
+                        persona["coordenadas_cuerpo"] = camara[
+                            "rectangulos_relacionados"
+                        ][i]
+                        persona["coordenadas_local"] = camara["locales_relacionados"][i]
+                        persona["nombre_camara"] = camara["camaras_relacionadas"][i]
+                        persona["ttl"] = datos.TTL_MAX
+                        semaforo.release()
+                    i = i + 1
 
 
 def rectangulos_entrada_salida(camara, frame):
