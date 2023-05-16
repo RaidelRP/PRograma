@@ -1,14 +1,11 @@
 # importing libraries
-import socket
-import cv2
-import pickle
-import struct
-#import imutils
 import argparse
+import pickle
+import socket
+import struct
 
 import config
-# import picam
-
+import cv2
 import numpy as np
 
 # construct the argument parser and parse the arguments

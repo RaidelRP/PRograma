@@ -1,10 +1,10 @@
 import io
 import time
+from threading import Thread
+
 import cv2
 import numpy as np
 import picamera
-#import config
-from threading import Thread
 
 
 class OpenCVCapture(Thread):

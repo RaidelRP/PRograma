@@ -1,8 +1,9 @@
-import cv2
-import os
-from random import randint
-from datetime import datetime
 import glob
+import os
+from datetime import datetime
+from random import randint
+
+import cv2
 
 
 def resize(image, width=None, height=None, inter=cv2.INTER_AREA):
@@ -117,13 +118,15 @@ def coincide_rostro(rostro, cuerpo):
 
     rostro_area = (rostro[2] - rostro[0]) * (rostro[3] - rostro[1])
 
-    return (intersection_area >= 0.5 * rostro_area)
+    return intersection_area >= 0.5 * rostro_area
 
 
 def unir_rostros_cuerpos(rostros, cuerpos):
     for rostro in rostros:
         for cuerpo in cuerpos:
-            if coincide_rostro(rostro["coordenadas_rostro"], cuerpo["coordenadas_cuerpo"]):
+            if coincide_rostro(
+                rostro["coordenadas_rostro"], cuerpo["coordenadas_cuerpo"]
+            ):
                 rostro["coordenadas_cuerpo"] = cuerpo["coordenadas_cuerpo"]
                 rostro["confianza_cuerpo"] = cuerpo["confianza_cuerpo"]
                 cuerpos.remove(cuerpo)
@@ -142,11 +145,11 @@ def comparar_imagenes(imagen1, imagen2):
 
     good_points = []
     for m, n in matches:
-        if m.distance < 0.6*n.distance:
+        if m.distance < 0.6 * n.distance:
             good_points.append(m)
 
     number_keypoints = 0
-    if (len(kp_1) <= len(kp_2)):
+    if len(kp_1) <= len(kp_2):
         number_keypoints = len(kp_1)
     else:
         number_keypoints = len(kp_2)
@@ -169,3 +172,12 @@ def comparar_imagen_con_varias(imagen, ruta):  # ruta = "rostros\*"
             return True
 
     return False
+
+
+def contenido_en(rect1, rect2):
+    return (
+        rect1[0] >= rect2[0]
+        and rect1[1] >= rect2[1]
+        and rect1[2] <= rect2[2]
+        and rect1[3] <= rect2[3]
+    )
