@@ -151,8 +151,10 @@ def deteccion_personas_yolo_identificacion(
         frame, 0.00392, (416, 416), (0, 0, 0), True, crop=False
     )
 
+    semaforo.acquire()
     net.setInput(blob)
     outs = net.forward(output_layers)
+    semaforo.release()
 
     # Showing informations on the screen
     class_ids = []
@@ -213,11 +215,12 @@ def deteccion_yunet_identificacion_rostros_desde_cuerpo(frame, cuerpo, detector_
     img_W = int(frame.shape[1])
     img_H = int(frame.shape[0])
 
+    semaforo.acquire()
     detector_yunet.setInputSize((img_W, img_H))
     detections = detector_yunet.detect(frame)
+    semaforo.release()
 
     face_locations = coordenadas_yunet_a_facerec(detections)
-    # print(len(face_locations))
     face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
     for (top, right, bottom, left), face_encoding in zip(
@@ -237,7 +240,7 @@ def deteccion_yunet_identificacion_rostros_desde_cuerpo(frame, cuerpo, detector_
 
         if matches[best_match_index]:  # Rostros identificados
             name = datos.known_face_names[best_match_index]
-            if contenido_en( (left, top, right, bottom), cuerpo["coordenadas_cuerpo"]):
+            if contenido_en((left, top, right, bottom), cuerpo["coordenadas_cuerpo"]):
                 cuerpo["coordenadas_rostro"] = (left, top, right, bottom)
                 cuerpo["nombre"] = name
                 cuerpo["distancia_rostro"] = face_distances[best_match_index]
@@ -307,7 +310,6 @@ def deteccion_identificacion_rostros(frame, coordenadas_local, rostros, nombre_c
     rgb_frame = frame[:, :, ::-1]
 
     face_locations = face_recognition.face_locations(rgb_frame)
-    # print(face_locations)
     face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
     for (top, right, bottom, left), face_encoding in zip(
@@ -383,7 +385,6 @@ def deteccion_yunet_identificacion_rostros(
     detections = detector_yunet.detect(frame)
 
     face_locations = coordenadas_yunet_a_facerec(detections)
-    # print(len(face_locations))
     face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
     for (top, right, bottom, left), face_encoding in zip(

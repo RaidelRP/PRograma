@@ -13,16 +13,17 @@ import datos
 from datos import imagenes, tracking_general
 from functions import resize, unir_rostros_cuerpos
 from metodos_deteccion import (
-    deteccion_personas_yolo,
     deteccion_personas_yolo_identificacion,
     deteccion_yunet_identificacion_rostros,
 )
 from metodos_seguimiento import (
     rectangulo_nombre_rostros,
     rectangulos_entrada_salida,
-    seguimiento,
     seguimiento_cuerpo_2,
 )
+
+CANT_FRAMES_1 = 5
+CANT_FRAMES_2 = 10
 
 semaforo = Semaphore(1)
 
@@ -48,8 +49,6 @@ def procesamiento(
     )
 
     seguimiento_cuerpo_2(cuerpos, nombre_camara)
-    rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame, camara)
-    rectangulos_entrada_salida(camara, frame)
 
 
 def facerec_from_webcam(local, camara, pos):
@@ -66,18 +65,42 @@ def facerec_from_webcam(local, camara, pos):
         "modelos/face_detection_yunet_2022mar.onnx", "", (320, 320)
     )
 
+    frame_id = 0
+    arreglo_hilos = []
+
     while True:
         ret, frame = video_capture.read()
 
-        procesamiento(
-            frame,
-            coordenadas_local,
-            nombre_camara,
-            camara,
-            net_yolo,
-            output_layers,
-            detector_yunet,
-        )
+        if ret == False:
+            break
+
+        frame_id += 1
+
+        if frame_id % CANT_FRAMES_1 == 0:
+            hilo_procesamiento = threading.Thread(
+                target=procesamiento,
+                args=(
+                    frame,
+                    coordenadas_local,
+                    nombre_camara,
+                    camara,
+                    net_yolo,
+                    output_layers,
+                    detector_yunet,
+                ),
+                name="PROCESAMIENTO",
+            )
+
+            hilo_procesamiento.start()
+            arreglo_hilos.append((hilo_procesamiento, frame_id))
+
+        for hilo, fr_id in arreglo_hilos:
+            if frame_id - fr_id > CANT_FRAMES_2:
+                hilo.join()
+                arreglo_hilos.remove((hilo, fr_id))
+
+        rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame, camara)
+        rectangulos_entrada_salida(camara, frame)
 
         semaforo.acquire()
         imagenes[pos] = frame
@@ -98,18 +121,42 @@ def facerec_from_video(local, camara, pos, ruta_video):
         "modelos/face_detection_yunet_2022mar.onnx", "", (320, 320)
     )
 
+    frame_id = 0
+    arreglo_hilos = []
+
     while True:
         ret, frame = video_capture.read()
 
-        procesamiento(
-            frame,
-            coordenadas_local,
-            nombre_camara,
-            camara,
-            net_yolo,
-            output_layers,
-            detector_yunet,
-        )
+        if ret == False:
+            break
+
+        frame_id += 1
+
+        if frame_id % CANT_FRAMES_1 == 0:
+            hilo_procesamiento = threading.Thread(
+                target=procesamiento,
+                args=(
+                    frame,
+                    coordenadas_local,
+                    nombre_camara,
+                    camara,
+                    net_yolo,
+                    output_layers,
+                    detector_yunet,
+                ),
+                name="PROCESAMIENTO",
+            )
+
+            hilo_procesamiento.start()
+            arreglo_hilos.append((hilo_procesamiento, frame_id))
+
+        for hilo, fr_id in arreglo_hilos:
+            if frame_id - fr_id > CANT_FRAMES_2:
+                hilo.join()
+                arreglo_hilos.remove((hilo, fr_id))
+
+        rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame, camara)
+        rectangulos_entrada_salida(camara, frame)
 
         semaforo.acquire()
         imagenes[pos] = frame
@@ -135,6 +182,9 @@ def facerec_from_socket(host_ip, port, local, camara, pos):
         "modelos/face_detection_yunet_2022mar.onnx", "", (320, 320)
     )
 
+    frame_id = 0
+    arreglo_hilos = []
+
     while True:
         while len(data) < payload_size:
             packet = client_socket.recv(4 * 1024)
@@ -150,15 +200,33 @@ def facerec_from_socket(host_ip, port, local, camara, pos):
         data = data[msg_size:]
         frame = pickle.loads(frame_data)
 
-        procesamiento(
-            frame,
-            coordenadas_local,
-            nombre_camara,
-            camara,
-            net_yolo,
-            output_layers,
-            detector_yunet,
-        )
+        frame_id += 1
+
+        if frame_id % CANT_FRAMES_1 == 0:
+            hilo_procesamiento = threading.Thread(
+                target=procesamiento,
+                args=(
+                    frame,
+                    coordenadas_local,
+                    nombre_camara,
+                    camara,
+                    net_yolo,
+                    output_layers,
+                    detector_yunet,
+                ),
+                name="PROCESAMIENTO",
+            )
+
+            hilo_procesamiento.start()
+            arreglo_hilos.append((hilo_procesamiento, frame_id))
+
+        for hilo, fr_id in arreglo_hilos:
+            if frame_id - fr_id > CANT_FRAMES_2:
+                hilo.join()
+                arreglo_hilos.remove((hilo, fr_id))
+
+        rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame, camara)
+        rectangulos_entrada_salida(camara, frame)
 
         semaforo.acquire()
         imagenes[pos] = frame

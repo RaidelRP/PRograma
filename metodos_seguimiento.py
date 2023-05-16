@@ -30,7 +30,6 @@ def seguimiento_cuerpo(cuerpos, nombre_camara):
                 persona_seguida["nombre_camara"] = nombre_camara
                 semaforo.release()
 
-            # print("IOU (Seguimiento cuerpo)", get_iou(cuerpo["coordenadas_cuerpo"], persona_seguida["coordenadas_cuerpo"]))
             if (
                 get_iou(
                     cuerpo["coordenadas_cuerpo"], persona_seguida["coordenadas_cuerpo"]
@@ -74,7 +73,6 @@ def seguimiento_rostro(rostros, nombre_camara):
                 persona_seguida["nombre_camara"] = nombre_camara
                 semaforo.release()
 
-            # print("IOU (Seguimiento rostro)", get_iou(rostro["coordenadas_rostro"], persona_seguida["coordenadas_rostro"]))
             if (
                 get_iou(
                     rostro["coordenadas_rostro"], persona_seguida["coordenadas_rostro"]
@@ -125,7 +123,6 @@ def seguimiento_cuerpo_2(cuerpos, nombre_camara):
                 persona_seguida["nombre_camara"] = nombre_camara
                 semaforo.release()
 
-            # print("IOU (Seguimiento cuerpo)", get_iou(cuerpo["coordenadas_cuerpo"], persona_seguida["coordenadas_cuerpo"]))
             if (
                 get_iou(
                     cuerpo["coordenadas_cuerpo"], persona_seguida["coordenadas_cuerpo"]
@@ -224,7 +221,6 @@ def rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame, camara):
                 if persona["ttl"] == 0:
                     i = 0
                     for top, right, bottom, left in camara["rectangulos"]:
-                        # print("IOU (Rectangulo nombre rostros)", get_iou(persona["coordenadas_cuerpo"], (top, right, bottom, left)))
                         if (
                             get_iou(
                                 persona["coordenadas_cuerpo"],

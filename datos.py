@@ -19,7 +19,7 @@ imagenes = [
     resize(cv2.imread("negro.png"), height=280, width=373),
 ]
 
-TTL_MAX = 30
+TTL_MAX = 100
 
 known_face_encodings = []
 known_face_names = []

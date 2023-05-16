@@ -31,7 +31,6 @@ def existe_en_tracking(nombre, tracking):
 
 def coincide_rostro_en_tracking(persona, tracking):
     for t in tracking:
-        # print("IOU (coincide_rostro_en_tracking)", get_iou(persona["coordenadas_rostro"], t["coordenadas_rostro"]))
         if get_iou(persona["coordenadas_rostro"], t["coordenadas_rostro"]) > 0.1:
             return True
     return False
@@ -39,7 +38,6 @@ def coincide_rostro_en_tracking(persona, tracking):
 
 def coincide_cuerpo_en_tracking(persona, tracking):
     for t in tracking:
-        # print("IOU (coincide_cuerpo_en_tracking)", get_iou(persona["coordenadas_rostro"], t["coordenadas_rostro"]))
         if get_iou(persona["coordenadas_cuerpo"], t["coordenadas_cuerpo"]) > 0.1:
             return True
     return False
@@ -167,7 +165,6 @@ def comparar_imagen_con_varias(imagen, ruta):  # ruta = "rostros\*"
         all_images_to_compare.append(image)
 
     for image_to_compare, title in zip(all_images_to_compare, titles):
-        # print("comparar con "+ title +": " + str(comparar_imagenes(imagen, image_to_compare)))
         if comparar_imagenes(imagen, image_to_compare) > 0.5:
             return True
 
