@@ -136,6 +136,8 @@ def seguimiento_cuerpo_2(cuerpos, nombre_camara):
             ):
                 semaforo.acquire()
                 persona_seguida["coordenadas_cuerpo"] = cuerpo["coordenadas_cuerpo"]
+                persona_seguida["coordenadas_rostro"] = cuerpo["coordenadas_rostro"]
+                persona_seguida["distancia_rostro"] = cuerpo["distancia_rostro"]
                 semaforo.release()
 
                 if cuerpo["confianza_cuerpo"] > persona_seguida["confianza_cuerpo"]:
@@ -160,6 +162,8 @@ def seguimiento_cuerpo_2(cuerpos, nombre_camara):
                 ):
                     semaforo.acquire()
                     persona_seguida["coordenadas_rostro"] = cuerpo["coordenadas_rostro"]
+                    persona_seguida["coordenadas_cuerpo"] = cuerpo["coordenadas_cuerpo"]
+                    persona_seguida["confianza_cuerpo"] = cuerpo["confianza_cuerpo"]
                     semaforo.release()
 
                     if cuerpo["distancia_rostro"] < persona_seguida["distancia_rostro"]:
@@ -209,6 +213,22 @@ def rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame, camara):
                     ),
                     datos.ROJO,
                     cv2.FILLED,
+                )
+
+                # print(persona["coordenadas_rostro"])
+
+                cv2.rectangle(
+                    frame,
+                    (
+                        persona["coordenadas_rostro"][0],
+                        persona["coordenadas_rostro"][1],
+                    ),
+                    (
+                        persona["coordenadas_rostro"][2],
+                        persona["coordenadas_rostro"][3],
+                    ),
+                    datos.NEGRO,
+                    2,
                 )
                 cv2.putText(
                     frame,

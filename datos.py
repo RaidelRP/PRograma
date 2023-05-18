@@ -64,7 +64,8 @@ CAM2_RECTS = [
     (500, 340, 640, 480),
 ]
 CAM3_RECTS = [(200, 150, 400, 480)]
-CAM4_RECTS = [(450, 150, 530, 400), (0, 0, 50, 100)]
+# CAM4_RECTS = [(450, 150, 530, 400), (0, 0, 50, 100)]
+CAM4_RECTS = [(450, 150, 530, 400)]
 CAM5_RECTS = [(330, 220, 450, 480), (575, 200, 640, 450)]
 
 CAM1_LOCS_REL = [AULA_COORD, PASILLO_COORD]
@@ -76,8 +77,9 @@ CAM5_LOCS_REL = [LOCAL3_COORD, AULA_PRE_COORD]
 CAM1_RECTS_REL = []
 CAM2_RECTS_REL = []
 CAM3_RECTS_REL = [(450, 180, 530, 400)]
-CAM4_RECTS_REL = [(330, 220, 450, 480), (200, 150, 400, 480)]
-CAM5_RECTS_REL = [(450, 180, 530, 400), (0, 0, 0, 0)]
+# CAM4_RECTS_REL = [(330, 220, 450, 480), (200, 150, 400, 480)]
+CAM4_RECTS_REL = [(330, 220, 450, 480)] # E/S de camara 5
+CAM5_RECTS_REL = [(450, 180, 530, 400), (0, 0, 0, 0)] # E/S de camara 4
 
 
 CAM1 = {
@@ -106,7 +108,8 @@ CAM4 = {
     "rectangulos": CAM4_RECTS,
     "rectangulos_relacionados": CAM4_RECTS_REL,
     "locales_relacionados": CAM4_LOCS_REL,
-    "camaras_relacionadas": ["CAMARA 5", "CAMARA 3"],
+    # "camaras_relacionadas": ["CAMARA 5", "CAMARA 3"],
+    "camaras_relacionadas": ["CAMARA 5"],
 }
 CAM5 = {
     "nombre_camara": "CAMARA 5",

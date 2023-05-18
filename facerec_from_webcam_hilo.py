@@ -11,7 +11,7 @@ import cv2
 
 import datos
 from datos import imagenes, tracking_general
-from functions import contenido_en, datos_camara, resize, unir_rostros_cuerpos
+from functions import contenido_en, datos_camara, grid, resize, unir_rostros_cuerpos
 from metodos_deteccion import (
     deteccion_personas_yolo_identificacion,
     deteccion_yunet_identificacion_rostros,
@@ -161,6 +161,9 @@ def facerec_from_video(local, camara, pos, ruta_video):
         rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame, camara)
         rectangulos_entrada_salida(camara, frame)
 
+        # height, width, _ = frame.shape
+        # grid(frame, width, height)
+
         semaforo.acquire()
         imagenes[pos] = frame
         semaforo.release()
@@ -290,34 +293,27 @@ def mostrar_mapa(pos):
                 persona["ttl"] = persona["ttl"] - 1
                 semaforo.release()
 
-            if persona["ttl"] == 0:
-                cam = datos_camara(persona["nombre_camara"])
-                if cam is not None:
-                    k = 0
-                    for left, top, right, bottom in cam["rectangulos"]:
-                        if contenido_en(
-                            persona["coordenadas_cuerpo"], (left, top, right, bottom)
-                        ) and (left, top, right, bottom) != (0, 0, 0, 0):
-                            semaforo.acquire()
-                            persona["coordenadas_cuerpo"] = cam[
-                                "rectangulos_relacionados"
-                            ][k]
-                            persona["coordenadas_local"] = cam["locales_relacionados"][
-                                k
-                            ]
-                            persona["nombre_camara"] = cam["camaras_relacionadas"][k]
-                            persona["ttl"] = datos.TTL_MAX
-                            semaforo.release()
+            # if persona["ttl"] == 0:
+            #     cam = datos_camara(persona["nombre_camara"])
+            #     if cam is not None:
+            #         k = 0
+            #         for left, top, right, bottom in cam["rectangulos"]:
+            #             if contenido_en(
+            #                 persona["coordenadas_cuerpo"], (left, top, right, bottom)
+            #             ) and (left, top, right, bottom) != (0, 0, 0, 0):
+            #                 semaforo.acquire()
+            #                 persona["coordenadas_cuerpo"] = cam[
+            #                     "rectangulos_relacionados"
+            #                 ][k]
+            #                 persona["coordenadas_local"] = cam["locales_relacionados"][
+            #                     k
+            #                 ]
+            #                 persona["nombre_camara"] = cam["camaras_relacionadas"][k]
+            #                 persona["ttl"] = datos.TTL_MAX
+            #                 semaforo.release()
 
-                            print("***********************************************")
-                        k = k + 1
-
-            # x_mapa = persona["coordenadas_local"][0] + 40
-            # y_mapa = persona["coordenadas_local"][1] + i * 25 + 40
-
-            # semaforo.acquire()
-            # persona["coordenadas_mapa"] = (x_mapa, y_mapa)
-            # semaforo.release()
+            #                 print("***********************************************")
+            #             k = k + 1
 
             if persona["ttl"] < 0:
                 semaforo.acquire()

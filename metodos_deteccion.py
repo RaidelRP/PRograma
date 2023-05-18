@@ -238,41 +238,48 @@ def deteccion_yunet_identificacion_rostros_desde_cuerpo(frame, cuerpo, detector_
 
         best_match_index = np.argmin(face_distances)
 
-        if matches[best_match_index]:  # Rostros identificados
-            name = datos.known_face_names[best_match_index]
-            if contenido_en((left, top, right, bottom), cuerpo["coordenadas_cuerpo"]):
-                cuerpo["coordenadas_rostro"] = (left, top, right, bottom)
+        if contenido_en((left, top, right, bottom), cuerpo["coordenadas_cuerpo"]):
+            cuerpo["coordenadas_rostro"] = (left, top, right, bottom)           
+
+            if matches[best_match_index]:  # Rostros identificados
+                name = datos.known_face_names[best_match_index]
                 cuerpo["nombre"] = name
                 cuerpo["distancia_rostro"] = face_distances[best_match_index]
 
-        else:  # Rostros desconocidos
-            id = contar_desconocidos()
-            # myPath = os.path.abspath(os.getcwd())
-            myPath = "rostros"
-            rostro = frame[top:bottom, left:right]
-            name += "_{}".format(id)
-            rostro = cv2.resize(rostro, (150, 150), interpolation=cv2.INTER_CUBIC)
+            else:  # Rostros desconocidos
+                id = contar_desconocidos()
+                # myPath = os.path.abspath(os.getcwd())
+                myPath = "rostros"
+                rostro = frame[top:bottom, left:right]
+                name += "_{}".format(id)
+                rostro = cv2.resize(rostro, (150, 150), interpolation=cv2.INTER_CUBIC)
 
-            # if not(comparar_imagen_con_varias(rostro, myPath+"\*")):
-            cv2.imwrite(myPath + "\\" + name + ".jpg", rostro)
+                # if not(comparar_imagen_con_varias(rostro, myPath+"\*")):
+                cv2.imwrite(myPath + "\\" + name + ".jpg", rostro)
 
-            image = face_recognition.load_image_file(myPath + "\\" + name + ".jpg")
+                image = face_recognition.load_image_file(myPath + "\\" + name + ".jpg")
 
-            if len(face_recognition.face_encodings(image)) > 0:
-                face_encoding = face_recognition.face_encodings(image)[0]
+                if len(face_recognition.face_encodings(image)) > 0:
+                    face_encoding = face_recognition.face_encodings(image)[0]
 
-                semaforo.acquire()
-                datos.known_face_encodings.append(face_encoding)
-                datos.known_face_names.append(name)
-                semaforo.release()
+                    semaforo.acquire()
+                    datos.known_face_encodings.append(face_encoding)
+                    datos.known_face_names.append(name)
+                    semaforo.release()
 
-            cv2.rectangle(frame, (left, top), (right, bottom), datos.ROJO, 2)
-            cv2.rectangle(
-                frame, (left, bottom - 35), (right, bottom), datos.ROJO, cv2.FILLED
-            )
-            cv2.putText(
-                frame, name, (left + 6, bottom - 6), datos.font, 1.0, datos.BLANCO, 1
-            )
+                cv2.rectangle(frame, (left, top), (right, bottom), datos.ROJO, 2)
+                cv2.rectangle(
+                    frame, (left, bottom - 35), (right, bottom), datos.ROJO, cv2.FILLED
+                )
+                cv2.putText(
+                    frame,
+                    name,
+                    (left + 6, bottom - 6),
+                    datos.font,
+                    1.0,
+                    datos.BLANCO,
+                    1,
+                )
 
 
 def deteccion_rostros_haar_cascade(frame):

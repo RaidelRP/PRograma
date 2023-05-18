@@ -181,9 +181,19 @@ def contenido_en(rect1, rect2):
         and rect1[3] <= rect2[3]
     )
 
+
 def datos_camara(cam):
     for local in datos.LOCALES:
         for camara in local["camaras"]:
             if camara["nombre_camara"] == cam:
                 return camara
     return None
+
+
+def grid(frame, width, height):
+    for i in range(0, width, 10):
+        cv2.line(frame, (i, 0), (i, height), (0, 0, 0), 1)
+        cv2.putText(frame, str(i), (i, 20), datos.font, 0.5, (0, 0, 0))
+    for i in range(0, height, 10):
+        cv2.line(frame, (0, i), (width, i), (0, 0, 0), 1)
+        cv2.putText(frame, str(i), (0, i), datos.font, 0.5, (0, 0, 0))
