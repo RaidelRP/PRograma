@@ -138,6 +138,7 @@ def deteccion_personas_yolo(
                 "distancia_rostro": 0.0,
                 "confianza_cuerpo": confidences[i],
                 "coordenadas_cuerpo": (x1, y1, x2, y2),
+                "transf": True,
             }
             cuerpos.append(cuerpo)
 
@@ -199,6 +200,7 @@ def deteccion_personas_yolo_identificacion(
                 "distancia_rostro": 0.0,
                 "confianza_cuerpo": confidences[i],
                 "coordenadas_cuerpo": (x1, y1, x2, y2),
+                "transf": True,
             }
             cuerpo_img = frame[y1:y2, x1:x2]
             # cv2.imshow("cuerpo_img",cuerpo_img)
@@ -239,7 +241,7 @@ def deteccion_yunet_identificacion_rostros_desde_cuerpo(frame, cuerpo, detector_
         best_match_index = np.argmin(face_distances)
 
         if contenido_en((left, top, right, bottom), cuerpo["coordenadas_cuerpo"]):
-            cuerpo["coordenadas_rostro"] = (left, top, right, bottom)           
+            cuerpo["coordenadas_rostro"] = (left, top, right, bottom)
 
             if matches[best_match_index]:  # Rostros identificados
                 name = datos.known_face_names[best_match_index]

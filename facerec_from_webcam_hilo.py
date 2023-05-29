@@ -298,9 +298,15 @@ def mostrar_mapa(pos):
                 if cam is not None:
                     k = 0
                     for left, top, right, bottom in cam["rectangulos"]:
-                        if contenido_en(
-                            persona["coordenadas_cuerpo"], (left, top, right, bottom)
-                        ) and (left, top, right, bottom) != (0, 0, 0, 0):
+                        print(persona["transf"])
+                        if (
+                            contenido_en(
+                                persona["coordenadas_cuerpo"],
+                                (left, top, right, bottom),
+                            )
+                            and (left, top, right, bottom) != (0, 0, 0, 0)
+                            and persona["transf"]
+                        ):
                             semaforo.acquire()
                             persona["coordenadas_cuerpo"] = cam[
                                 "rectangulos_relacionados"
@@ -310,6 +316,7 @@ def mostrar_mapa(pos):
                             ]
                             persona["nombre_camara"] = cam["camaras_relacionadas"][k]
                             persona["ttl"] = datos.TTL_MAX
+                            persona["transf"] = False
                             semaforo.release()
 
                             print("***********************************************")
