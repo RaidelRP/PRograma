@@ -293,27 +293,27 @@ def mostrar_mapa(pos):
                 persona["ttl"] = persona["ttl"] - 1
                 semaforo.release()
 
-            # if persona["ttl"] == 0:
-            #     cam = datos_camara(persona["nombre_camara"])
-            #     if cam is not None:
-            #         k = 0
-            #         for left, top, right, bottom in cam["rectangulos"]:
-            #             if contenido_en(
-            #                 persona["coordenadas_cuerpo"], (left, top, right, bottom)
-            #             ) and (left, top, right, bottom) != (0, 0, 0, 0):
-            #                 semaforo.acquire()
-            #                 persona["coordenadas_cuerpo"] = cam[
-            #                     "rectangulos_relacionados"
-            #                 ][k]
-            #                 persona["coordenadas_local"] = cam["locales_relacionados"][
-            #                     k
-            #                 ]
-            #                 persona["nombre_camara"] = cam["camaras_relacionadas"][k]
-            #                 persona["ttl"] = datos.TTL_MAX
-            #                 semaforo.release()
+            if persona["ttl"] == 0:
+                cam = datos_camara(persona["nombre_camara"])
+                if cam is not None:
+                    k = 0
+                    for left, top, right, bottom in cam["rectangulos"]:
+                        if contenido_en(
+                            persona["coordenadas_cuerpo"], (left, top, right, bottom)
+                        ) and (left, top, right, bottom) != (0, 0, 0, 0):
+                            semaforo.acquire()
+                            persona["coordenadas_cuerpo"] = cam[
+                                "rectangulos_relacionados"
+                            ][k]
+                            persona["coordenadas_local"] = cam["locales_relacionados"][
+                                k
+                            ]
+                            persona["nombre_camara"] = cam["camaras_relacionadas"][k]
+                            persona["ttl"] = datos.TTL_MAX
+                            semaforo.release()
 
-            #                 print("***********************************************")
-            #             k = k + 1
+                            print("***********************************************")
+                        k = k + 1
 
             if persona["ttl"] < 0:
                 semaforo.acquire()
