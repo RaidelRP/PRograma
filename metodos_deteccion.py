@@ -6,7 +6,7 @@ import imutils
 import numpy as np
 
 import datos
-from functions import contar_desconocidos, contenido_en, get_iou
+from functions import contar_desconocidos, contenido_en, datos_camara, get_iou
 
 semaforo = Semaphore(1)
 
@@ -140,6 +140,10 @@ def deteccion_personas_yolo(
                 "coordenadas_cuerpo": (x1, y1, x2, y2),
                 "transf": True,
             }
+            camara = datos_camara(nombre_camara)
+            for rectangulo in camara["rectangulos_relacionados"]:
+                if contenido_en(cuerpo["coordenadas_cuerpo"], rectangulo):
+                    cuerpo["transf"] = False
             cuerpos.append(cuerpo)
 
 
@@ -202,6 +206,11 @@ def deteccion_personas_yolo_identificacion(
                 "coordenadas_cuerpo": (x1, y1, x2, y2),
                 "transf": True,
             }
+            camara = datos_camara(nombre_camara)
+            for rectangulo in camara["rectangulos_relacionados"]:
+                if contenido_en(cuerpo["coordenadas_cuerpo"], rectangulo):
+                    cuerpo["transf"] = False
+            cuerpos.append(cuerpo)
             cuerpo_img = frame[y1:y2, x1:x2]
             # cv2.imshow("cuerpo_img",cuerpo_img)
             # cv2.waitKey(0)
@@ -337,6 +346,11 @@ def deteccion_identificacion_rostros(frame, coordenadas_local, rostros, nombre_c
             "coordenadas_cuerpo": (0, 0, 0, 0),
             "confianza_cuerpo": 0.0,
         }
+        camara = datos_camara(nombre_camara)
+        for rectangulo in camara["rectangulos_relacionados"]:
+            if contenido_en(cuerpo["coordenadas_cuerpo"], rectangulo):
+                cuerpo["transf"] = False
+        cuerpos.append(cuerpo)
 
         matches = face_recognition.compare_faces(
             datos.known_face_encodings, face_encoding
@@ -412,6 +426,12 @@ def deteccion_yunet_identificacion_rostros(
             "coordenadas_cuerpo": (0, 0, 0, 0),
             "confianza_cuerpo": 0.0,
         }
+
+        camara = datos_camara(nombre_camara)
+        for rectangulo in camara["rectangulos_relacionados"]:
+            if contenido_en(cuerpo["coordenadas_cuerpo"], rectangulo):
+                cuerpo["transf"] = False
+        cuerpos.append(cuerpo)
 
         matches = face_recognition.compare_faces(
             datos.known_face_encodings, face_encoding

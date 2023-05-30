@@ -8,8 +8,9 @@ from datos import TTL_MAX, tracking_general
 from functions import (
     coincide_cuerpo_en_tracking,
     coincide_rostro_en_tracking,
-    get_iou,
     contenido_en,
+    datos_camara,
+    get_iou,
 )
 
 semaforo = Semaphore(1)
@@ -138,6 +139,12 @@ def seguimiento_cuerpo_2(cuerpos, nombre_camara):
                 persona_seguida["coordenadas_cuerpo"] = cuerpo["coordenadas_cuerpo"]
                 persona_seguida["coordenadas_rostro"] = cuerpo["coordenadas_rostro"]
                 persona_seguida["distancia_rostro"] = cuerpo["distancia_rostro"]
+
+                camara = datos_camara(nombre_camara)
+                persona_seguida["transf"]= True
+                for rectangulo in camara["rectangulos_relacionados"]:
+                    if contenido_en(persona_seguida["coordenadas_cuerpo"], rectangulo):
+                        persona_seguida["transf"]= False
                 semaforo.release()
 
                 if cuerpo["confianza_cuerpo"] > persona_seguida["confianza_cuerpo"]:
@@ -164,6 +171,12 @@ def seguimiento_cuerpo_2(cuerpos, nombre_camara):
                     persona_seguida["coordenadas_rostro"] = cuerpo["coordenadas_rostro"]
                     persona_seguida["coordenadas_cuerpo"] = cuerpo["coordenadas_cuerpo"]
                     persona_seguida["confianza_cuerpo"] = cuerpo["confianza_cuerpo"]
+
+                    camara = datos_camara(nombre_camara)
+                    persona_seguida["transf"]= True
+                    for rectangulo in camara["rectangulos_relacionados"]:
+                        if contenido_en(persona_seguida["coordenadas_cuerpo"], rectangulo):
+                            persona_seguida["transf"]= False
                     semaforo.release()
 
                     if cuerpo["distancia_rostro"] < persona_seguida["distancia_rostro"]:
@@ -232,7 +245,8 @@ def rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame, camara):
                 )
                 cv2.putText(
                     frame,
-                    persona["nombre"] + " TTL: " + str(persona["ttl"]),
+                    # persona["nombre"] + " TTL: " + str(persona["ttl"]),
+                    persona["nombre"],
                     (
                         persona["coordenadas_cuerpo"][0] + 6,
                         persona["coordenadas_cuerpo"][3] - 6,

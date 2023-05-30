@@ -280,7 +280,7 @@ def mostrar_mapa(pos):
         for persona in tracking_general:
             cv2.putText(
                 img,
-                persona["nombre"] + " " + str(persona["ttl"]),
+                persona["nombre"] + " " + str(persona["ttl"]) + " " + str(persona["transf"]),
                 persona["coordenadas_mapa"],
                 datos.font,
                 0.75,
@@ -373,13 +373,13 @@ hilo3 = threading.Thread(
 hilo4 = threading.Thread(target=mostrar_mapa, args=(0,), name="PLANO")
 hilo5 = threading.Thread(target=mostrar_imagenes, name="VISUALIZACION")
 
-hilo1.start()
+# hilo1.start()
 hilo2.start()
 hilo3.start()
 hilo4.start()
 hilo5.start()
 
-hilo1.join()
+# hilo1.join()
 hilo2.join()
 hilo3.join()
 hilo4.join()
