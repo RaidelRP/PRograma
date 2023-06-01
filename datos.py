@@ -56,14 +56,14 @@ DIRECCION_COORD = (860, 980, 1075, 1275)
 LAB_COORD = (405, 1220, 860, 1510)
 LAB_COORD_2 = (860, 1275, 1075, 1510)
 
-CAM1_RECTS = [(0, 250, 100, 480), (530, 350, 640, 480), (530, 70, 640, 300)]
+CAM1_RECTS = [(0, 250, 100, 480), (530, 350, 640, 480), (465, 100, 590, 300)]
 CAM2_RECTS = [
     (0, 0, 140, 280),
     (0, 320, 140, 480),
     (500, 80, 640, 320),
     (500, 340, 640, 480),
 ]
-CAM3_RECTS = [(200, 150, 400, 480)]
+CAM3_RECTS = [(410, 70, 500, 200)]
 # CAM4_RECTS = [(450, 150, 530, 400), (0, 0, 50, 100)]
 CAM4_RECTS = [(450, 150, 530, 400)]
 # CAM4_RECTS = [(0, 0, 50, 100)]
@@ -71,18 +71,22 @@ CAM5_RECTS = [(330, 220, 450, 480), (575, 200, 640, 450)]
 
 CAM1_LOCS_REL = [AULA_COORD, PASILLO_COORD]
 CAM2_LOCS_REL = [PASILLO_COORD, LOCAL2_COORD, DIRECCION_COORD, LOCAL1_COORD]
-CAM3_LOCS_REL = [LOCAL3_COORD]
+CAM3_LOCS_REL = [LOBBY_COORD]
 CAM4_LOCS_REL = [LOCAL2_COORD]
 # CAM4_LOCS_REL = [LOCAL2_COORD, AULA_COORD]
 # CAM4_LOCS_REL = [AULA_COORD]
 CAM5_LOCS_REL = [LOCAL3_COORD, AULA_PRE_COORD]
 
-CAM1_RECTS_REL = []
+CAM1_RECTS_REL = [
+    (410, 70, 500, 200),
+    (0, 0, 0, 0),
+    (0, 0, 0, 0),
+]
 CAM2_RECTS_REL = []
-CAM3_RECTS_REL = [(450, 180, 530, 400)]
+CAM3_RECTS_REL = [(0, 250, 100, 480)]
 # CAM4_RECTS_REL = [(330, 220, 450, 480), (200, 150, 400, 480)]
-CAM4_RECTS_REL = [(330, 220, 450, 480)] # E/S de camara 5
-CAM5_RECTS_REL = [(450, 180, 530, 400), (0, 0, 0, 0)] # E/S de camara 4
+CAM4_RECTS_REL = [(330, 220, 450, 480)]  # E/S de camara 5
+CAM5_RECTS_REL = [(450, 180, 530, 400), (0, 0, 0, 0)]  # E/S de camara 4
 
 
 CAM1 = {
@@ -90,7 +94,7 @@ CAM1 = {
     "rectangulos": CAM1_RECTS,
     "rectangulos_relacionados": CAM1_RECTS_REL,
     "locales_relacionados": CAM1_LOCS_REL,
-    "camaras_relacionadas": ["NINGUNO", "NINGUNO", "NINGUNO"],
+    "camaras_relacionadas": ["CAMARA 3", "NINGUNO", "NINGUNO"],
 }
 CAM2 = {
     "nombre_camara": "CAMARA 2",
@@ -104,7 +108,7 @@ CAM3 = {
     "rectangulos": CAM3_RECTS,
     "rectangulos_relacionados": CAM3_RECTS_REL,
     "locales_relacionados": CAM3_LOCS_REL,
-    "camaras_relacionadas": ["CAMARA 4"],
+    "camaras_relacionadas": ["CAMARA 1"],
 }
 CAM4 = {
     "nombre_camara": "CAMARA 4",

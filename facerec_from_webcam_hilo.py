@@ -357,18 +357,18 @@ def mostrar_imagenes():
 
 hilo1 = threading.Thread(
     target=facerec_from_video,
-    args=(datos.AULA, datos.CAM3, 1, "video 2022-09-10 07.29.31.avi"),
+    args=(datos.AULA, datos.CAM3, 3, "video 2022-09-10 07.29.31.avi"),
     name="CAMARA 3",
 )
 hilo2 = threading.Thread(
     target=facerec_from_socket,
-    args=("10.30.125.149", 10500, datos.LOCAL3, datos.CAM4, 2),
-    name="CAMARA 4",
+    args=("10.30.125.149", 10500, datos.LOBBY, datos.CAM1, 1),
+    name="CAMARA 1",
 )
 hilo3 = threading.Thread(
     target=facerec_from_socket,
-    args=("10.30.125.150", 10510, datos.LOCAL2, datos.CAM5, 3),
-    name="CAMARA 5",
+    args=("10.30.125.150", 10510, datos.AULA, datos.CAM3, 2),
+    name="CAMARA 3",
 )
 hilo4 = threading.Thread(target=mostrar_mapa, args=(0,), name="PLANO")
 hilo5 = threading.Thread(target=mostrar_imagenes, name="VISUALIZACION")
