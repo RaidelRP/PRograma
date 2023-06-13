@@ -355,11 +355,11 @@ def mostrar_imagenes():
             break
 
 
-hilo1 = threading.Thread(
-    target=facerec_from_video,
-    args=(datos.AULA, datos.CAM3, 3, "video 2022-09-10 07.29.31.avi"),
-    name="CAMARA 3",
-)
+# hilo1 = threading.Thread(
+#     target=facerec_from_video,
+#     args=(datos.AULA, datos.CAM3, 3, "video 2022-09-10 07.29.31.avi"),
+#     name="CAMARA 3",
+# )
 hilo2 = threading.Thread(
     target=facerec_from_socket,
     args=("10.30.125.149", 10500, datos.LOBBY, datos.CAM1, 1),
