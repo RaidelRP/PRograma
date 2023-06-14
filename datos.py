@@ -97,8 +97,8 @@ CAM1 = {
     "rectangulos": CAM1_RECTS,
     "rectangulos_relacionados": CAM1_RECTS_REL,
     "locales_relacionados": CAM1_LOCS_REL,
-    # "camaras_relacionadas": ["CAMARA 3", "NINGUNO", "NINGUNO"],    
-    "camaras_relacionadas": ["CAMARA 3"]
+    # "camaras_relacionadas": ["CAMARA 3", "NINGUNO", "NINGUNO"],
+    "camaras_relacionadas": ["CAMARA 3"],
 }
 CAM2 = {
     "nombre_camara": "CAMARA 2",

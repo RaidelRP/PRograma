@@ -79,6 +79,8 @@ def facerec_from_webcam(local, camara, pos):
 
         frame_id += 1
 
+        frame_copia = frame
+
         if frame_id % CANT_FRAMES_1 == 0:
             hilo_procesamiento = threading.Thread(
                 target=procesamiento,
@@ -102,12 +104,14 @@ def facerec_from_webcam(local, camara, pos):
                 hilo.join()
                 arreglo_hilos.remove((hilo, fr_id))
 
-        rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame, camara)
-        rectangulos_entrada_salida(camara, frame)
+                rectangulo_nombre_rostros(
+                    coordenadas_local, nombre_camara, frame_copia, camara
+                )
+                rectangulos_entrada_salida(camara, frame_copia)
 
-        semaforo.acquire()
-        imagenes[pos] = frame
-        semaforo.release()
+                semaforo.acquire()
+                imagenes[pos] = frame_copia
+                semaforo.release()
 
 
 def facerec_from_video(local, camara, pos, ruta_video):
@@ -135,6 +139,8 @@ def facerec_from_video(local, camara, pos, ruta_video):
 
         frame_id += 1
 
+        frame_copia = frame
+
         if frame_id % CANT_FRAMES_1 == 0:
             hilo_procesamiento = threading.Thread(
                 target=procesamiento,
@@ -158,15 +164,17 @@ def facerec_from_video(local, camara, pos, ruta_video):
                 hilo.join()
                 arreglo_hilos.remove((hilo, fr_id))
 
-        rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame, camara)
-        rectangulos_entrada_salida(camara, frame)
+                rectangulo_nombre_rostros(
+                    coordenadas_local, nombre_camara, frame_copia, camara
+                )
+                rectangulos_entrada_salida(camara, frame_copia)
 
-        # height, width, _ = frame.shape
-        # grid(frame, width, height)
+                # height, width, _ = frame.shape
+                # grid(frame, width, height)
 
-        semaforo.acquire()
-        imagenes[pos] = frame
-        semaforo.release()
+                semaforo.acquire()
+                imagenes[pos] = frame_copia
+                semaforo.release()
 
 
 def facerec_from_socket(host_ip, port, local, camara, pos):
@@ -208,6 +216,8 @@ def facerec_from_socket(host_ip, port, local, camara, pos):
 
         frame_id += 1
 
+        frame_copia = frame
+
         if frame_id % CANT_FRAMES_1 == 0:
             hilo_procesamiento = threading.Thread(
                 target=procesamiento,
@@ -231,12 +241,14 @@ def facerec_from_socket(host_ip, port, local, camara, pos):
                 hilo.join()
                 arreglo_hilos.remove((hilo, fr_id))
 
-        rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame, camara)
-        rectangulos_entrada_salida(camara, frame)
+                rectangulo_nombre_rostros(
+                    coordenadas_local, nombre_camara, frame_copia, camara
+                )
+                rectangulos_entrada_salida(camara, frame_copia)
 
-        semaforo.acquire()
-        imagenes[pos] = frame
-        semaforo.release()
+                semaforo.acquire()
+                imagenes[pos] = frame_copia
+                semaforo.release()
 
     client_socket.close()
 
@@ -280,7 +292,11 @@ def mostrar_mapa(pos):
         for persona in tracking_general:
             cv2.putText(
                 img,
-                persona["nombre"] + " " + str(persona["ttl"]) + " " + str(persona["transf"]),
+                persona["nombre"]
+                + " "
+                + str(persona["ttl"])
+                + " "
+                + str(persona["transf"]),
                 persona["coordenadas_mapa"],
                 datos.font,
                 0.75,
@@ -355,11 +371,11 @@ def mostrar_imagenes():
             break
 
 
-# hilo1 = threading.Thread(
-#     target=facerec_from_video,
-#     args=(datos.AULA, datos.CAM3, 3, "video 2022-09-10 07.29.31.avi"),
-#     name="CAMARA 3",
-# )
+hilo1 = threading.Thread(
+    target=facerec_from_video,
+    args=(datos.AULA, datos.CAM3, 3, "video 2022-09-10 07.29.31.avi"),
+    name="CAMARA 3",
+)
 hilo2 = threading.Thread(
     target=facerec_from_socket,
     args=("10.30.125.149", 10500, datos.LOBBY, datos.CAM1, 1),
@@ -373,13 +389,13 @@ hilo3 = threading.Thread(
 hilo4 = threading.Thread(target=mostrar_mapa, args=(0,), name="PLANO")
 hilo5 = threading.Thread(target=mostrar_imagenes, name="VISUALIZACION")
 
-# hilo1.start()
+hilo1.start()
 hilo2.start()
 hilo3.start()
 hilo4.start()
 hilo5.start()
 
-# hilo1.join()
+hilo1.join()
 hilo2.join()
 hilo3.join()
 hilo4.join()

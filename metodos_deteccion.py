@@ -278,19 +278,19 @@ def deteccion_yunet_identificacion_rostros_desde_cuerpo(frame, cuerpo, detector_
                     datos.known_face_names.append(name)
                     semaforo.release()
 
-                cv2.rectangle(frame, (left, top), (right, bottom), datos.ROJO, 2)
-                cv2.rectangle(
-                    frame, (left, bottom - 35), (right, bottom), datos.ROJO, cv2.FILLED
-                )
-                cv2.putText(
-                    frame,
-                    name,
-                    (left + 6, bottom - 6),
-                    datos.font,
-                    1.0,
-                    datos.BLANCO,
-                    1,
-                )
+                # cv2.rectangle(frame, (left, top), (right, bottom), datos.ROJO, 2)
+                # cv2.rectangle(
+                #     frame, (left, bottom - 35), (right, bottom), datos.ROJO, cv2.FILLED
+                # )
+                # cv2.putText(
+                #     frame,
+                #     name,
+                #     (left + 6, bottom - 6),
+                #     datos.font,
+                #     1.0,
+                #     datos.BLANCO,
+                #     1,
+                # )
 
 
 def deteccion_rostros_haar_cascade(frame):
