@@ -93,11 +93,11 @@ def coordenada_aleatoria(x, y):
 
 
 def historial(nombre):
-    with open("historial.txt", "a+") as historial:
+    with open("historial.txt", "a+") as history_file:
         fecha_completa = datetime.now()
         fecha = fecha_completa.strftime("%Y-%m-%d")
         hora = fecha_completa.strftime("%H:%M:%S")
-        historial.writelines(f"{fecha} {hora} - {nombre}\n")
+        history_file.writelines(f"{fecha} {hora} - {nombre}\n")
 
 
 def coincide_rostro(rostro, cuerpo):
@@ -124,9 +124,7 @@ def coincide_rostro(rostro, cuerpo):
 def unir_rostros_cuerpos(rostros, cuerpos):
     for rostro in rostros:
         for cuerpo in cuerpos:
-            if coincide_rostro(
-                rostro["coordenadas_rostro"], cuerpo["coordenadas_cuerpo"]
-            ):
+            if coincide_rostro(rostro["coordenadas_rostro"], cuerpo["coordenadas_cuerpo"]):
                 rostro["coordenadas_cuerpo"] = cuerpo["coordenadas_cuerpo"]
                 rostro["confianza_cuerpo"] = cuerpo["confianza_cuerpo"]
                 cuerpos.remove(cuerpo)
@@ -175,10 +173,10 @@ def comparar_imagen_con_varias(imagen, ruta):  # ruta = "rostros\*"
 
 def contenido_en(rect1, rect2):
     return (
-        rect1[0] >= rect2[0]
-        and rect1[1] >= rect2[1]
-        and rect1[2] <= rect2[2]
-        and rect1[3] <= rect2[3]
+            rect1[0] >= rect2[0]
+            and rect1[1] >= rect2[1]
+            and rect1[2] <= rect2[2]
+            and rect1[3] <= rect2[3]
     )
 
 

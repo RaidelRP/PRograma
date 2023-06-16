@@ -6,12 +6,12 @@ import imutils
 import numpy as np
 
 import datos
-from functions import contar_desconocidos, contenido_en, datos_camara, get_iou
+from functions import contar_desconocidos, contenido_en, datos_camara
 
 semaforo = Semaphore(1)
 
 
-def detecion_cuerpo_hog(frame, coordenadas_local, nombre_camara):
+def detecion_cuerpo_hog(frame):
     hog = cv2.HOGDescriptor()
     hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
 
@@ -25,27 +25,14 @@ def detecion_cuerpo_hog(frame, coordenadas_local, nombre_camara):
 
     ratio = longitud_inicial * 1.0 / longitud_nueva
 
-    (humans, _) = hog.detectMultiScale(
-        image, winStride=(5, 5), padding=(3, 3), scale=1.21
-    )
+    (humans, _) = hog.detectMultiScale(image, winStride=(5, 5), padding=(3, 3), scale=1.21)
 
     print("Human Detected : ", len(humans))
 
     for x, y, w, h in humans:
-        x1 = int(x * ratio)
-        y1 = int(y * ratio)
-        w1 = int(w * ratio)
-        h1 = int(h * ratio)
+        x1, y1, w1, h1 = int(x * ratio), int(y * ratio), int(w * ratio), int(h * ratio)
         cv2.rectangle(frame, (x1, y1), (x1 + w1, y1 + h1), (0, 0, 255), 2)
-        cv2.putText(
-            frame,
-            "cuerpo hog",
-            (x1, y1 + 20),
-            cv2.FONT_HERSHEY_DUPLEX,
-            1.0,
-            (0, 0, 255),
-            1,
-        )
+        cv2.putText(frame, "cuerpo hog", (x1, y1 + 20), cv2.FONT_HERSHEY_DUPLEX, 1.0, (0, 0, 255), 1)
 
 
 def deteccion_cuerpo(frame):
@@ -60,42 +47,26 @@ def deteccion_cuerpo(frame):
 
     for x, y, w, h in bodies:
         cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
-        cv2.putText(
-            frame, "body", (x, y + 20), cv2.FONT_HERSHEY_DUPLEX, 1.0, (255, 0, 0), 1
-        )
-        roi_gray = gray[y : y + h, x : x + w]
-        roi_color = frame[y : y + h, x : x + w]
+        cv2.putText(frame, "body", (x, y + 20), cv2.FONT_HERSHEY_DUPLEX, 1.0, (255, 0, 0), 1)
 
     for x, y, w, h in upper:
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        cv2.putText(
-            frame, "upper", (x, y + 20), cv2.FONT_HERSHEY_DUPLEX, 1.0, (0, 255, 0), 1
-        )
-        roi_gray = gray[y : y + h, x : x + w]
-        roi_color = frame[y : y + h, x : x + w]
+        cv2.putText(frame, "upper", (x, y + 20), cv2.FONT_HERSHEY_DUPLEX, 1.0, (0, 255, 0), 1)
 
     for x, y, w, h in lower:
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
-        cv2.putText(
-            frame, "lower", (x, y + 20), cv2.FONT_HERSHEY_DUPLEX, 1.0, (0, 0, 255), 1
-        )
-        roi_gray = gray[y : y + h, x : x + w]
-        roi_color = frame[y : y + h, x : x + w]
+        cv2.putText(frame, "lower", (x, y + 20), cv2.FONT_HERSHEY_DUPLEX, 1.0, (0, 0, 255), 1)
 
 
-def deteccion_personas_yolo(
-    frame, cuerpos, coordenadas_local, nombre_camara, net, output_layers
-):
+def deteccion_personas_yolo(frame, cuerpos, coordenadas_local, nombre_camara, net, output_layers):
     height, width, _ = frame.shape
     # Detecting objects
-    blob = cv2.dnn.blobFromImage(
-        frame, 0.00392, (416, 416), (0, 0, 0), True, crop=False
-    )
+    blob = cv2.dnn.blobFromImage(frame, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
 
     net.setInput(blob)
     outs = net.forward(output_layers)
 
-    # Showing informations on the screen
+    # Showing information on the screen
     class_ids = []
     confidences = []
     boxes = []
@@ -138,7 +109,7 @@ def deteccion_personas_yolo(
                 "distancia_rostro": 0.0,
                 "confianza_cuerpo": confidences[i],
                 "coordenadas_cuerpo": (x1, y1, x2, y2),
-                "transf": True,
+                "transf": True
             }
             camara = datos_camara(nombre_camara)
             for rectangulo in camara["rectangulos_relacionados"]:
@@ -147,21 +118,18 @@ def deteccion_personas_yolo(
             cuerpos.append(cuerpo)
 
 
-def deteccion_personas_yolo_identificacion(
-    frame, cuerpos, coordenadas_local, nombre_camara, net, output_layers, detector_yunet
-):
+def deteccion_personas_yolo_identificacion(frame, cuerpos, coordenadas_local, nombre_camara, net, output_layers,
+                                           detector_yunet):
     height, width, _ = frame.shape
     # Detecting objects
-    blob = cv2.dnn.blobFromImage(
-        frame, 0.00392, (416, 416), (0, 0, 0), True, crop=False
-    )
+    blob = cv2.dnn.blobFromImage(frame, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
 
     semaforo.acquire()
     net.setInput(blob)
     outs = net.forward(output_layers)
     semaforo.release()
 
-    # Showing informations on the screen
+    # Showing information on the screen
     class_ids = []
     confidences = []
     boxes = []
@@ -204,19 +172,16 @@ def deteccion_personas_yolo_identificacion(
                 "distancia_rostro": 0.0,
                 "confianza_cuerpo": confidences[i],
                 "coordenadas_cuerpo": (x1, y1, x2, y2),
-                "transf": True,
+                "transf": True
             }
             camara = datos_camara(nombre_camara)
             for rectangulo in camara["rectangulos_relacionados"]:
                 if contenido_en(cuerpo["coordenadas_cuerpo"], rectangulo):
                     cuerpo["transf"] = False
             cuerpos.append(cuerpo)
-            cuerpo_img = frame[y1:y2, x1:x2]
             # cv2.imshow("cuerpo_img",cuerpo_img)
             # cv2.waitKey(0)
-            deteccion_yunet_identificacion_rostros_desde_cuerpo(
-                frame, cuerpo, detector_yunet
-            )
+            deteccion_yunet_identificacion_rostros_desde_cuerpo(frame, cuerpo, detector_yunet)
             cuerpos.append(cuerpo)
 
 
@@ -234,18 +199,12 @@ def deteccion_yunet_identificacion_rostros_desde_cuerpo(frame, cuerpo, detector_
     face_locations = coordenadas_yunet_a_facerec(detections)
     face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
-    for (top, right, bottom, left), face_encoding in zip(
-        face_locations, face_encodings
-    ):
+    for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
         name = "Desconocido"
 
-        matches = face_recognition.compare_faces(
-            datos.known_face_encodings, face_encoding
-        )
+        matches = face_recognition.compare_faces(datos.known_face_encodings, face_encoding)
 
-        face_distances = face_recognition.face_distance(
-            datos.known_face_encodings, face_encoding
-        )
+        face_distances = face_recognition.face_distance(datos.known_face_encodings, face_encoding)
 
         best_match_index = np.argmin(face_distances)
 
@@ -279,18 +238,8 @@ def deteccion_yunet_identificacion_rostros_desde_cuerpo(frame, cuerpo, detector_
                     semaforo.release()
 
                 # cv2.rectangle(frame, (left, top), (right, bottom), datos.ROJO, 2)
-                # cv2.rectangle(
-                #     frame, (left, bottom - 35), (right, bottom), datos.ROJO, cv2.FILLED
-                # )
-                # cv2.putText(
-                #     frame,
-                #     name,
-                #     (left + 6, bottom - 6),
-                #     datos.font,
-                #     1.0,
-                #     datos.BLANCO,
-                #     1,
-                # )
+                # cv2.rectangle(frame, (left, bottom - 35), (right, bottom), datos.ROJO, cv2.FILLED)
+                # cv2.putText(frame, name, (left + 6, bottom - 6), datos.font, 1.0, datos.BLANCO, 1)
 
 
 def deteccion_rostros_haar_cascade(frame):
@@ -299,27 +248,18 @@ def deteccion_rostros_haar_cascade(frame):
 
     for x, y, w, h in faces:
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        cv2.putText(
-            frame,
-            "rostro haar",
-            (x, y + 20),
-            cv2.FONT_HERSHEY_DUPLEX,
-            1.0,
-            (0, 255, 0),
-            1,
-        )
+        cv2.putText(frame, "rostro haar", (x, y + 20), cv2.FONT_HERSHEY_DUPLEX, 1.0, (0, 255, 0), 1)
 
 
 def coordenadas_yunet_a_facerec(detections):
     locations = []
     if detections[1] is not None:
         for detection in detections[1]:
-            coordenadas_fr = (
-                int(detection[1]),
-                int(detection[0] + detection[2]),
-                int(detection[1] + detection[3]),
-                int(detection[0]),
-            )
+            coordenadas_fr = (int(detection[1]),
+                              int(detection[0] + detection[2]),
+                              int(detection[1] + detection[3]),
+                              int(detection[0])
+                              )
             locations.append(coordenadas_fr)
     return locations
 
@@ -331,7 +271,7 @@ def deteccion_identificacion_rostros(frame, coordenadas_local, rostros, nombre_c
     face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
     for (top, right, bottom, left), face_encoding in zip(
-        face_locations, face_encodings
+            face_locations, face_encodings
     ):
         # Persona con nombre, distancia, coordenadas y ttl
         name = "Desconocido"
@@ -344,21 +284,17 @@ def deteccion_identificacion_rostros(frame, coordenadas_local, rostros, nombre_c
             "coordenadas_rostro": (left, top, right, bottom),
             "distancia_rostro": 0.0,
             "coordenadas_cuerpo": (0, 0, 0, 0),
-            "confianza_cuerpo": 0.0,
+            "confianza_cuerpo": 0.0
         }
         camara = datos_camara(nombre_camara)
         for rectangulo in camara["rectangulos_relacionados"]:
-            if contenido_en(cuerpo["coordenadas_cuerpo"], rectangulo):
-                cuerpo["transf"] = False
-        cuerpos.append(cuerpo)
+            if contenido_en(p["coordenadas_cuerpo"], rectangulo):
+                p["transf"] = False
+        rostros.append(p)
 
-        matches = face_recognition.compare_faces(
-            datos.known_face_encodings, face_encoding
-        )
+        matches = face_recognition.compare_faces(datos.known_face_encodings, face_encoding)
 
-        face_distances = face_recognition.face_distance(
-            datos.known_face_encodings, face_encoding
-        )
+        face_distances = face_recognition.face_distance(datos.known_face_encodings, face_encoding)
         best_match_index = np.argmin(face_distances)
         if matches[best_match_index]:  # Rostros identificados
             name = datos.known_face_names[best_match_index]
@@ -388,17 +324,11 @@ def deteccion_identificacion_rostros(frame, coordenadas_local, rostros, nombre_c
                 semaforo.release()
 
             cv2.rectangle(frame, (left, top), (right, bottom), datos.ROJO, 2)
-            cv2.rectangle(
-                frame, (left, bottom - 35), (right, bottom), datos.ROJO, cv2.FILLED
-            )
-            cv2.putText(
-                frame, name, (left + 6, bottom - 6), datos.font, 1.0, datos.BLANCO, 1
-            )
+            cv2.rectangle(frame, (left, bottom - 35), (right, bottom), datos.ROJO, cv2.FILLED)
+            cv2.putText(frame, name, (left + 6, bottom - 6), datos.font, 1.0, datos.BLANCO, 1)
 
 
-def deteccion_yunet_identificacion_rostros(
-    frame, coordenadas_local, rostros, nombre_camara, detector_yunet
-):
+def deteccion_yunet_identificacion_rostros(frame, coordenadas_local, rostros, nombre_camara, detector_yunet):
     rgb_frame = frame[:, :, ::-1]
 
     img_W = int(frame.shape[1])
@@ -410,9 +340,7 @@ def deteccion_yunet_identificacion_rostros(
     face_locations = coordenadas_yunet_a_facerec(detections)
     face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
-    for (top, right, bottom, left), face_encoding in zip(
-        face_locations, face_encodings
-    ):
+    for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
         # Persona con nombre, distancia, coordenadas y ttl
         name = "Desconocido"
         p = {
@@ -424,22 +352,18 @@ def deteccion_yunet_identificacion_rostros(
             "coordenadas_rostro": (left, top, right, bottom),
             "distancia_rostro": 0.0,
             "coordenadas_cuerpo": (0, 0, 0, 0),
-            "confianza_cuerpo": 0.0,
+            "confianza_cuerpo": 0.0
         }
 
         camara = datos_camara(nombre_camara)
         for rectangulo in camara["rectangulos_relacionados"]:
-            if contenido_en(cuerpo["coordenadas_cuerpo"], rectangulo):
-                cuerpo["transf"] = False
-        cuerpos.append(cuerpo)
+            if contenido_en(p["coordenadas_cuerpo"], rectangulo):
+                p["transf"] = False
+        rostros.append(p)
 
-        matches = face_recognition.compare_faces(
-            datos.known_face_encodings, face_encoding
-        )
+        matches = face_recognition.compare_faces(datos.known_face_encodings, face_encoding)
 
-        face_distances = face_recognition.face_distance(
-            datos.known_face_encodings, face_encoding
-        )
+        face_distances = face_recognition.face_distance(datos.known_face_encodings, face_encoding)
 
         best_match_index = np.argmin(face_distances)
 
@@ -471,9 +395,5 @@ def deteccion_yunet_identificacion_rostros(
                 semaforo.release()
 
             cv2.rectangle(frame, (left, top), (right, bottom), datos.ROJO, 2)
-            cv2.rectangle(
-                frame, (left, bottom - 35), (right, bottom), datos.ROJO, cv2.FILLED
-            )
-            cv2.putText(
-                frame, name, (left + 6, bottom - 6), datos.font, 1.0, datos.BLANCO, 1
-            )
+            cv2.rectangle(frame, (left, bottom - 35), (right, bottom), datos.ROJO, cv2.FILLED)
+            cv2.putText(frame, name, (left + 6, bottom - 6), datos.font, 1.0, datos.BLANCO, 1)

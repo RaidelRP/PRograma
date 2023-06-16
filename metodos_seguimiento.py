@@ -5,13 +5,7 @@ import cv2
 
 import datos
 from datos import TTL_MAX, tracking_general
-from functions import (
-    coincide_cuerpo_en_tracking,
-    coincide_rostro_en_tracking,
-    contenido_en,
-    datos_camara,
-    get_iou,
-)
+from functions import coincide_cuerpo_en_tracking, coincide_rostro_en_tracking, contenido_en, datos_camara, get_iou
 
 semaforo = Semaphore(1)
 
@@ -28,20 +22,12 @@ def seguimiento_cuerpo(cuerpos, nombre_camara):
 
         for persona_seguida in tracking_general:
             # si se detecta procedente de un local sin camara, asignarle la camara actual
-            if (
-                cuerpo["nombre"] == persona_seguida["nombre"]
-                and persona_seguida["nombre_camara"] == "NINGUNO"
-            ):
+            if cuerpo["nombre"] == persona_seguida["nombre"] and persona_seguida["nombre_camara"] == "NINGUNO":
                 semaforo.acquire()
                 persona_seguida["nombre_camara"] = nombre_camara
                 semaforo.release()
 
-            if (
-                get_iou(
-                    cuerpo["coordenadas_cuerpo"], persona_seguida["coordenadas_cuerpo"]
-                )
-                > 0.1
-            ):
+            if get_iou(cuerpo["coordenadas_cuerpo"], persona_seguida["coordenadas_cuerpo"]) > 0.1:
                 semaforo.acquire()
                 persona_seguida["coordenadas_cuerpo"] = cuerpo["coordenadas_cuerpo"]
                 semaforo.release()
@@ -71,20 +57,12 @@ def seguimiento_rostro(rostros, nombre_camara):
 
         for persona_seguida in tracking_general:
             # si se detecta procedente de un local sin camara, asignarle la camara actual
-            if (
-                rostro["nombre"] == persona_seguida["nombre"]
-                and persona_seguida["nombre_camara"] == "NINGUNO"
-            ):
+            if rostro["nombre"] == persona_seguida["nombre"] and persona_seguida["nombre_camara"] == "NINGUNO":
                 semaforo.acquire()
                 persona_seguida["nombre_camara"] = nombre_camara
                 semaforo.release()
 
-            if (
-                get_iou(
-                    rostro["coordenadas_rostro"], persona_seguida["coordenadas_rostro"]
-                )
-                > 0.1
-            ):
+            if get_iou(rostro["coordenadas_rostro"], persona_seguida["coordenadas_rostro"]) > 0.1:
                 semaforo.acquire()
                 persona_seguida["coordenadas_rostro"] = rostro["coordenadas_rostro"]
                 semaforo.release()
@@ -121,30 +99,22 @@ def seguimiento_cuerpo_2(cuerpos, nombre_camara):
 
         for persona_seguida in tracking_general:
             # si se detecta procedente de un local sin camara, asignarle la camara actual
-            if (
-                cuerpo["nombre"] == persona_seguida["nombre"]
-                and persona_seguida["nombre_camara"] == "NINGUNO"
-            ):
+            if cuerpo["nombre"] == persona_seguida["nombre"] and persona_seguida["nombre_camara"] == "NINGUNO":
                 semaforo.acquire()
                 persona_seguida["nombre_camara"] = nombre_camara
                 semaforo.release()
 
-            if (
-                get_iou(
-                    cuerpo["coordenadas_cuerpo"], persona_seguida["coordenadas_cuerpo"]
-                )
-                > 0.1
-            ):
+            if get_iou(cuerpo["coordenadas_cuerpo"], persona_seguida["coordenadas_cuerpo"]) > 0.1:
                 semaforo.acquire()
                 persona_seguida["coordenadas_cuerpo"] = cuerpo["coordenadas_cuerpo"]
                 persona_seguida["coordenadas_rostro"] = cuerpo["coordenadas_rostro"]
                 persona_seguida["distancia_rostro"] = cuerpo["distancia_rostro"]
 
                 camara = datos_camara(nombre_camara)
-                persona_seguida["transf"]= True
+                persona_seguida["transf"] = True
                 for rectangulo in camara["rectangulos_relacionados"]:
                     if contenido_en(persona_seguida["coordenadas_cuerpo"], rectangulo):
-                        persona_seguida["transf"]= False
+                        persona_seguida["transf"] = False
                 semaforo.release()
 
                 if cuerpo["confianza_cuerpo"] > persona_seguida["confianza_cuerpo"]:
@@ -160,23 +130,17 @@ def seguimiento_cuerpo_2(cuerpos, nombre_camara):
                 semaforo.release()
 
             if cuerpo["coordenadas_rostro"] != (0, 0, 0, 0):
-                if (
-                    get_iou(
-                        cuerpo["coordenadas_rostro"],
-                        persona_seguida["coordenadas_rostro"],
-                    )
-                    > 0.1
-                ):
+                if get_iou(cuerpo["coordenadas_rostro"], persona_seguida["coordenadas_rostro"]) > 0.1:
                     semaforo.acquire()
                     persona_seguida["coordenadas_rostro"] = cuerpo["coordenadas_rostro"]
                     persona_seguida["coordenadas_cuerpo"] = cuerpo["coordenadas_cuerpo"]
                     persona_seguida["confianza_cuerpo"] = cuerpo["confianza_cuerpo"]
 
                     camara = datos_camara(nombre_camara)
-                    persona_seguida["transf"]= True
+                    persona_seguida["transf"] = True
                     for rectangulo in camara["rectangulos_relacionados"]:
                         if contenido_en(persona_seguida["coordenadas_cuerpo"], rectangulo):
-                            persona_seguida["transf"]= False
+                            persona_seguida["transf"] = False
                     semaforo.release()
 
                     if cuerpo["distancia_rostro"] < persona_seguida["distancia_rostro"]:
@@ -192,89 +156,57 @@ def seguimiento_cuerpo_2(cuerpos, nombre_camara):
                     semaforo.release()
 
 
-def rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame, camara):
+def rectangulo_nombre_rostros(coordenadas_local, nombre_camara, frame):
     for persona in tracking_general:
         # Si se encuentra en el local actual y la camara actual
-        if (
-            persona["coordenadas_local"] == coordenadas_local
-            and persona["nombre_camara"] == nombre_camara
-        ):
+        if persona["coordenadas_local"] == coordenadas_local and persona["nombre_camara"] == nombre_camara:
             if persona["coordenadas_cuerpo"] != (0, 0, 0, 0):
-                cv2.rectangle(
-                    frame,
-                    (
-                        persona["coordenadas_cuerpo"][0],
-                        persona["coordenadas_cuerpo"][1],
-                    ),
-                    (
-                        persona["coordenadas_cuerpo"][2],
-                        persona["coordenadas_cuerpo"][3],
-                    ),
-                    datos.ROJO,
-                    2,
-                )
+                cv2.rectangle(frame,
+                              (persona["coordenadas_cuerpo"][0],
+                               persona["coordenadas_cuerpo"][1]),
+                              (persona["coordenadas_cuerpo"][2],
+                               persona["coordenadas_cuerpo"][3]),
+                              datos.ROJO,
+                              2)
 
-                cv2.rectangle(
-                    frame,
-                    (
-                        persona["coordenadas_cuerpo"][0],
-                        persona["coordenadas_cuerpo"][3] - 35,
-                    ),
-                    (
-                        persona["coordenadas_cuerpo"][2],
-                        persona["coordenadas_cuerpo"][3],
-                    ),
-                    datos.ROJO,
-                    cv2.FILLED,
-                )
+                cv2.rectangle(frame,
+                              (persona["coordenadas_cuerpo"][0],
+                               persona["coordenadas_cuerpo"][3] - 35),
+                              (persona["coordenadas_cuerpo"][2],
+                               persona["coordenadas_cuerpo"][3]),
+                              datos.ROJO,
+                              cv2.FILLED)
 
                 # print(persona["coordenadas_rostro"])
 
-                cv2.rectangle(
-                    frame,
-                    (
-                        persona["coordenadas_rostro"][0],
-                        persona["coordenadas_rostro"][1],
-                    ),
-                    (
-                        persona["coordenadas_rostro"][2],
-                        persona["coordenadas_rostro"][3],
-                    ),
-                    datos.NEGRO,
-                    2,
-                )
-                cv2.putText(
-                    frame,
-                    # persona["nombre"] + " TTL: " + str(persona["ttl"]),
-                    persona["nombre"],
-                    (
-                        persona["coordenadas_cuerpo"][0] + 6,
-                        persona["coordenadas_cuerpo"][3] - 6,
-                    ),
-                    datos.font,
-                    1.0,
-                    datos.BLANCO,
-                    1,
-                )
+                cv2.rectangle(frame,
+                              (persona["coordenadas_rostro"][0],
+                               persona["coordenadas_rostro"][1]),
+                              (persona["coordenadas_rostro"][2],
+                               persona["coordenadas_rostro"][3]),
+                              datos.NEGRO,
+                              2)
+                cv2.putText(frame,
+                            # persona["nombre"] + " TTL: " + str(persona["ttl"]),
+                            persona["nombre"],
+                            (persona["coordenadas_cuerpo"][0] + 6,
+                             persona["coordenadas_cuerpo"][3] - 6),
+                            datos.font,
+                            1.0,
+                            datos.BLANCO,
+                            1)
 
 
 def transferencia(coordenadas_local, nombre_camara, camara):
     for persona in tracking_general:
         # Si se encuentra en el local actual y la camara actual
-        if (
-            persona["coordenadas_local"] == coordenadas_local
-            and persona["nombre_camara"] == nombre_camara
-        ):
+        if persona["coordenadas_local"] == coordenadas_local and persona["nombre_camara"] == nombre_camara:
             if persona["ttl"] == 0:
                 i = 0
                 for left, top, right, bottom in camara["rectangulos"]:
-                    if contenido_en(
-                        persona["coordenadas_cuerpo"], (left, top, right, bottom)
-                    ):
+                    if contenido_en(persona["coordenadas_cuerpo"], (left, top, right, bottom)):
                         semaforo.acquire()
-                        persona["coordenadas_cuerpo"] = camara[
-                            "rectangulos_relacionados"
-                        ][i]
+                        persona["coordenadas_cuerpo"] = camara["rectangulos_relacionados"][i]
                         persona["coordenadas_local"] = camara["locales_relacionados"][i]
                         persona["nombre_camara"] = camara["camaras_relacionadas"][i]
                         persona["ttl"] = datos.TTL_MAX
