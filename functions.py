@@ -33,14 +33,14 @@ def existe_en_tracking(nombre, tracking):
 
 def coincide_rostro_en_tracking(persona, tracking):
     for t in tracking:
-        if get_iou(persona["coordenadas_rostro"], t["coordenadas_rostro"]) > 0.1:
+        if get_iou(persona["coordenadas_rostro"], t["coordenadas_rostro"]) > datos.UMBRAL_COINCIDENCIA:
             return True
     return False
 
 
 def coincide_cuerpo_en_tracking(persona, tracking):
     for t in tracking:
-        if get_iou(persona["coordenadas_cuerpo"], t["coordenadas_cuerpo"]) > 0.1:
+        if get_iou(persona["coordenadas_cuerpo"], t["coordenadas_cuerpo"]) > datos.UMBRAL_COINCIDENCIA:
             return True
     return False
 

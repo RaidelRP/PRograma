@@ -18,6 +18,7 @@ imagenes = [resize(cv2.imread("negro.png"), height=840, width=597),
             resize(cv2.imread("negro.png"), height=280, width=373)]
 
 TTL_MAX = 100
+UMBRAL_COINCIDENCIA = 0.1
 
 known_face_encodings = []
 known_face_names = []
@@ -151,4 +152,4 @@ LAB2 = {"nombre_local": "LABORATORIO",
         "coordenadas": LAB_COORD_2, "camaras": []}
 
 CAMARAS = [CAM1, CAM2]
-LOCALES = [AULA, LOBBY, LOCAL1, LOCAL2, LOCAL3, PASILLO, BANNO, PANTRY, AULA_PRE, DIRECCION, LAB, LAB2, ]
+LOCALES = [AULA, LOBBY, LOCAL1, LOCAL2, LOCAL3, PASILLO, BANNO, PANTRY, AULA_PRE, DIRECCION, LAB, LAB2]
